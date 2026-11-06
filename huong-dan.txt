@@ -1,0 +1,11 @@
+Ảnh khách đặt trong thư mục này (vd pregrad-04.jpg), rồi khai báo trong CONFIG.gallery ở đầu file index.html:
+{ src: "images/gallery/pregrad-04.jpg", tag: "pregrad", caption: "Pre-Graduation – Sân trường", viTri: "50% 40%" }
+Tag hợp lệ: pregrad (Pre-Graduation) | le (Lễ tốt nghiệp)
+viTri = phần ảnh được giữ lại khi cắt vừa khung (ngang dọc), vd "50% 30%" giữ phần trên.
+Ảnh lớn đầu trang (hero) sửa ở CONFIG.heroAnh.
+Nên nén ảnh JPG dưới 1MB, cạnh dài khoảng 1600–2000px.
+
+Ảnh hiện có (ảnh khách thật):
+- pregrad-giang-duong-01.jpg  → đang dùng làm ảnh hero
+- pregrad-ufm-hoi-truong-02.jpg → ảnh khách (Hội trường UFM)
+- pregrad-vay-trai-03.jpg     → ảnh khách
