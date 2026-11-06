@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>GS.studio – Chụp ảnh kỷ yếu & tốt nghiệp TP.HCM</title>
+<meta name="description" content="GS.studio (Golden Shot) – studio chụp ảnh kỷ yếu & tốt nghiệp tại TP. Hồ Chí Minh. Gói ra mắt ưu đãi: Pre-Graduation, Lễ tốt nghiệp, Kỷ yếu, Kỷ yếu Fullday. Giữ cho bạn, trọn khoảnh khắc." />
+<meta name="theme-color" content="#FBF7EF" />
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="vi_VN" />
+<meta property="og:site_name" content="GS.studio" />
+<meta property="og:title" content="GS.studio – Chụp ảnh kỷ yếu & tốt nghiệp TP.HCM" />
+<meta property="og:description" content="GS.studio – giữ cho bạn, trọn khoảnh khắc. Gói ra mắt ưu đãi chụp Pre-Graduation, lễ tốt nghiệp & kỷ yếu tại TP.HCM." />
+<meta property="og:image" content="https://gs-studio-web-app-cc8432.netlify.app/images/logo.png" />
+<meta property="og:url" content="https://gs-studio-web-app-cc8432.netlify.app/" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" href="images/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="images/logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500;1,600&family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<script>
+/* ==========================================================================
+   CONFIG – MỌI NỘI DUNG CẦN SỬA ĐỀU NẰM Ở ĐÂY
+   --------------------------------------------------------------------------
+   • Giá: ghi số nguyên, KHÔNG có dấu chấm (vd 499000). Trang tự định dạng thành 499.000đ
+   • giaGoc: giá tham khảo thị trường (sẽ bị gạch ngang). Để null nếu không muốn hiện.
+   • Ảnh: đặt file vào thư mục images/... rồi ghi đường dẫn, vd "images/gallery/anh-01.jpg"
+   ========================================================================== */
+
+// Phụ thu nhóm Kỷ yếu: ĐÃ CỘNG SẴN vào giá Group (G) của gói "Kỷ yếu" & "Kỷ yếu Fullday" bên dưới.
+// Muốn đổi mức phụ thu → chỉ sửa số này, giá nhóm 2 gói đó tự cập nhật theo.
+const kyYeuPhuThu = 150000;
+
+const CONFIG = {
+  // ---- THÔNG TIN LIÊN HỆ (sửa SĐT, link mạng xã hội tại đây) ----
+  lienHe: {
+    ten: "GS.studio",
+    sdt: "0941 788 170",                 // hiển thị
+    sdtGoi: "0941788170",                // dùng cho nút gọi / Zalo (không dấu cách)
+    facebook: "https://www.facebook.com/profile.php?id=61596411890643",
+    messenger: "https://m.me/61596411890643", // link mở Messenger nhắn tin trực tiếp
+    tiktok: "https://www.tiktok.com/@gs.std",
+    instagram: "",                       // dán link Instagram khi có, vd "https://instagram.com/gs.studio" (để trống = ẩn nút)
+    zalo: "https://zalo.me/0941788170",
+    khuVuc: "TP. Hồ Chí Minh & các tỉnh lân cận",
+    driveAnhKhach: "https://drive.google.com/drive/folders/1buTWiZM1L3hACNSSIX0P5xQxN_X_kYhx?usp=drive_link"
+  },
+
+  // ---- ƯU ĐÃI RA MẮT ----
+  uuDai: {
+    nhan: "ƯU ĐÃI RA MẮT",
+    denNgay: "31/12/2026",               // hạn ưu đãi, định dạng dd/mm/yyyy
+    moTa: "Giá ưu đãi dành riêng cho mùa ra mắt"
+  },
+
+  kyYeuPhuThu: kyYeuPhuThu,             // phụ thu nhóm Kỷ yếu (sửa ở dòng "const kyYeuPhuThu" phía trên)
+  datCocPhanTram: 30,                    // % đặt cọc đề xuất
+  extraGio: 60000,                       // phụ thu mỗi giờ chụp thêm
+  extraRetouch: { gia: 100000, soAnh: 10 }, // 100.000đ / 10 ảnh
+  // Ghi chú hiện dưới từng dòng phụ thu (để "" nếu không cần)
+  ghiChuExtraGio: "Chỉ tính khi hai bên đã thống nhất & đã hết thời gian của gói",
+  ghiChuExtraRetouch: "",
+
+  // Dùng Netlify Image CDN để nén ảnh (true khi chạy trên Netlify). Mở file trực tiếp trên máy vẫn chạy bình thường.
+  dungImageCDN: true,
+
+  // ---- BẢNG GIÁ ----
+  // Mỗi gói có kieu: "SCG" (Single/Couple/Group) hoặc "tuyChon" (danh sách lựa chọn tính theo người)
+  // donVi: "nguoi" = giá x số người, "cap" = giá x số cặp
+  goi: [
+    {
+      id: "pregrad",
+      ten: "Pre-Graduation",
+      phuDe: "Chụp trước lễ • ngoài trời / studio",
+      icon: "🎓",
+      kieu: "SCG",
+      gia: {
+        S: { gia: 599000, giaGoc: null, thoiGian: "3 giờ", donVi: "nguoi" },
+        C: { gia: 1099000, giaGoc: null, thoiGian: "4 giờ", donVi: "cap" },
+        G: { gia: 499000, giaGoc: null, thoiGian: "6 giờ", donVi: "nguoi", ghiChu: "nhóm từ 3 người" }
+      },
+      daoCu: false
+    },
+    {
+      id: "ceremony",
+      ten: "Graduation Ceremony",
+      phuDe: "Chụp ngày lễ tốt nghiệp",
+      icon: "🎉",
+      kieu: "tuyChon",
+      tuyChon: [
+        { id: "ceremony-after", ten: "Gói Sau lễ", thoiGian: "2h30", gia: 499000, giaGoc: null, donVi: "nguoi" },
+        { id: "ceremony-full", ten: "Gói Trước & Sau lễ", thoiGian: "Trước lễ 2h + sau lễ 2h30", gia: 799000, giaGoc: null, donVi: "nguoi" },
+        { id: "ceremony-combo", ten: "Combo Pre-Grad + Lễ", thoiGian: "Theo lịch của bạn", gia: null, donVi: "nguoi" } // gia: null = "Liên hệ tư vấn"
+      ],
+      daoCu: false
+    },
+    {
+      id: "kyyeu",
+      ten: "Kỷ yếu",
+      phuDe: "Đồng phục lớp • concept lớp",
+      icon: "📒",
+      kieu: "SCG",
+      gia: {
+        S: { gia: 699000, giaGoc: null, thoiGian: "3 giờ", donVi: "nguoi" },
+        C: { gia: 1149000, giaGoc: null, thoiGian: "4 giờ", donVi: "cap" },
+        G: { gia: 449000 + kyYeuPhuThu, giaGoc: null, thoiGian: "6 giờ", donVi: "nguoi", ghiChu: "có hỗ trợ đạo cụ" } // = 599.000đ (449.000đ + phụ thu kỷ yếu)
+      },
+      daoCu: true
+    },
+    {
+      id: "fullday",
+      ten: "Kỷ yếu Fullday",
+      phuDe: "Bắt đầu 7h – kết thúc 17h • nhiều concept & địa điểm",
+      icon: "☀️",
+      kieu: "SCG",
+      noiBat: true, // gắn nhãn "Trọn ngày"
+      gia: {
+        S: { gia: 1149000, giaGoc: null, thoiGian: "7h – 17h", donVi: "nguoi" },
+        C: { gia: 2049000, giaGoc: null, thoiGian: "7h – 17h", donVi: "cap" },
+        G: { gia: 849000 + kyYeuPhuThu, giaGoc: null, thoiGian: "7h – 17h", donVi: "nguoi", ghiChu: "có hỗ trợ đạo cụ" } // = 999.000đ (849.000đ + phụ thu kỷ yếu)
+      },
+      daoCu: true
+    }
+  ],
+
+  // ---- QUYỀN LỢI CHUNG – gói nào cũng có, hiện 1 lần trong khung riêng ----
+  quyenLoi: [
+    "Retouch ảnh",
+    "Hỗ trợ pose dáng",
+    "3 lần chỉnh sửa retouch",
+    "Tư vấn concept, màu ảnh phù hợp",
+    "Trả full file gốc qua Google Drive",
+    "Hỗ trợ design"
+  ],
+  // Quyền lợi thêm – chỉ gói có daoCu: true (Kỷ yếu & Kỷ yếu Fullday)
+  quyenLoiKyYeu: "Hỗ trợ đạo cụ kèm theo (riêng Kỷ yếu & Kỷ yếu Fullday)",
+
+  ghiChuGia: "Giá có thể thay đổi theo địa điểm, số người và thời điểm cao điểm.",
+
+  // ---- CÂU HỎI THƯỜNG GẶP ----
+  faq: [
+    { q: "Đặt cọc bao nhiêu để giữ lịch?", a: "Bạn đặt cọc khoảng 30% tổng chi phí để tụi mình giữ lịch và chuẩn bị concept. Phần còn lại thanh toán sau buổi chụp." },
+    { q: "Bao lâu thì nhận được ảnh?", a: "File gốc gửi qua Google Drive trong 1–2 ngày sau buổi chụp. Ảnh retouch hoàn thiện trong khoảng 5–7 ngày (mùa cao điểm có thể lâu hơn một chút, tụi mình sẽ báo trước)." },
+    { q: "Trời mưa thì có đổi lịch được không?", a: "Được nha. Nếu thời tiết xấu ảnh hưởng buổi chụp ngoài trời, hai bên thống nhất dời lịch miễn phí, tiền cọc vẫn được giữ nguyên." },
+    { q: "Studio có cho thuê trang phục, đạo cụ không?", a: "Gói Kỷ yếu & Kỷ yếu Fullday có sẵn đạo cụ cơ bản (bảng tên, hoa, bóng bay…). Trang phục như lễ phục, áo dài, vest tụi mình có thể giới thiệu chỗ thuê uy tín, giá sinh viên." },
+    { q: "Phụ thu được tính như thế nào?", a: "Extra giờ chụp 60.000đ/giờ – chỉ tính khi hai bên đã thống nhất và đã hết thời gian của gói. Extra retouch 100.000đ/10 ảnh. Địa điểm xa trung tâm có thể phát sinh phí di chuyển, tụi mình sẽ báo rõ trước." },
+    { q: "Nhóm đông người (cả lớp) có giá riêng không?", a: "Có nha! Lớp từ 15 người trở lên nhắn tụi mình để nhận báo giá riêng kèm ưu đãi cho cả lớp." }
+  ],
+
+  // ---- ẢNH HERO (ảnh lớn đầu trang) – ảnh khách thật ----
+  heroAnh: {
+    src: "images/gallery/pregrad-giang-duong-01.jpg",
+    alt: "Tân cử nhân UFM 2026 mặc áo trắng, đeo sash đỏ, đứng giữa giảng đường",
+    viTri: "48% 40%"                     // vị trí lấy khung ảnh (ngang dọc) khi cắt vừa khung, vd "50% 50%"
+  },
+
+  // ---- ẢNH KHÁCH ----
+  // Chép ảnh vào thư mục images/gallery/ rồi thêm 1 dòng ở đây.
+  // Ảnh hiện ở Tab "Concept & Ảnh" (có bộ lọc + xem lớn); 3 ảnh đầu hiện thêm ở mục "Ảnh khách thật" trang chủ.
+  // tag: "pregrad" (Pre-Graduation) | "le" (Lễ tốt nghiệp)
+  // viTri: phần ảnh được ưu tiên giữ lại khi cắt khung, vd "50% 30%"
+  gallery: [
+    // Sắp xếp theo từng khách (mỗi người 1 cụm ảnh liền nhau). Ảnh ở mục "Khoảnh khắc tụi mình đã giữ" chọn riêng trong anhNoiBat bên dưới.
+    // — Bạn UFM —
+    { src: "images/gallery/pregrad-ufm-hoi-truong-02.jpg", tag: "pregrad", caption: "Pre-Graduation – Hội trường UFM", viTri: "55% 40%" },
+    { src: "images/gallery/pregrad-vay-trai-03.jpg", tag: "pregrad", caption: "Pre-Graduation – Tà váy trắng", viTri: "50% 45%" },
+    // — Gia Hân (UEH) —
+    { src: "images/gallery/le-ueh-sash-bay-04.jpg", tag: "le", caption: "Lễ tốt nghiệp UEH – Tà sash tung bay", viTri: "45% 35%" },
+    { src: "images/gallery/le-ueh-bac-them-05.jpg", tag: "le", caption: "Lễ tốt nghiệp UEH – Bậc thềm hội trường", viTri: "52% 40%" },
+    { src: "images/gallery/le-ueh-bang-cu-nhan-06.jpg", tag: "le", caption: "Lễ tốt nghiệp UEH – Bằng, hoa & sash", viTri: "60% 50%" },
+    // — Văn Niên (UEH) —
+    { src: "images/gallery/pregrad-ueh-hoi-truong-07.jpg", tag: "pregrad", caption: "Pre-Graduation UEH – Hội trường ghế đỏ", viTri: "55% 45%" },
+    { src: "images/gallery/le-ueh-trao-bang-08.jpg", tag: "le", caption: "Lễ tốt nghiệp UEH – Tấm bằng cử nhân", viTri: "58% 40%" },
+    // — Quỳnh Anh (FTU) —
+    { src: "images/gallery/pregrad-ftu-san-co-09.jpg", tag: "pregrad", caption: "Pre-Graduation FTU – Sân cỏ trường", viTri: "50% 40%" },
+    { src: "images/gallery/pregrad-ftu-hoa-su-10.jpg", tag: "pregrad", caption: "Pre-Graduation FTU – Bên cành hoa sứ", viTri: "55% 45%" }
+  ],
+
+  // ---- 4 ẢNH NỔI BẬT ở mục "Khoảnh khắc tụi mình đã giữ" (lưới 2 x 2) ----
+  // Ghi tên file đã có trong gallery. Đang xếp: mỗi bạn 1 tấm, xen kẽ ảnh tối / ảnh sáng và Pre-Grad / Lễ cho cân.
+  anhNoiBat: [
+    "images/gallery/pregrad-ufm-hoi-truong-02.jpg",   // UFM – hội trường (tối)   | Pre-Grad
+    "images/gallery/pregrad-ftu-san-co-09.jpg",       // Quỳnh Anh – sân cỏ (sáng) | Pre-Grad
+    "images/gallery/le-ueh-trao-bang-08.jpg",         // Văn Niên – tấm bằng (sáng) | Lễ
+    "images/gallery/le-ueh-bac-them-05.jpg"           // Gia Hân – bậc thềm (tối)   | Lễ
+  ],
+
+  // ---- MỤC "SẮP RA MẮT" (cuối Tab Concept & Ảnh + băng nhỏ trên footer) ----
+  // Không ghi mức giảm giá / con số ưu đãi cụ thể ở đây nha.
+  sapRaMat: {
+    nhan: "ĐANG ĐƯỢC CẬP NHẬT",
+    noiDung: "Tụi mình đang chuẩn bị thêm nhiều concept mới và sẽ cập nhật dần ở đây. Nhớ theo dõi page GS.studio để không bỏ lỡ concept mới và các ưu đãi theo dịp (gần Tết, mùa tốt nghiệp, ...) nha!",
+    bangNho: "Nhà Sót sắp có thêm concept mới – theo dõi page GS.studio để không bỏ lỡ nha ✨",
+    // Thẻ concept "Coming soon" (chỉ để xem, không bấm chọn)
+    concept: [
+      { ten: "Kỷ yếu cả lớp", moTa: "Concept đồng phục, sân trường cùng hội bạn thân" },
+      { ten: "Studio tối giản", moTa: "Phông nền sáng, tông kem – trắng nhẹ nhàng" },
+      { ten: "Hoàng hôn ngoài trời", moTa: "Bắt nắng chiều vàng ươm, dáng candid tự nhiên" }
+    ]
+  },
+
+  // ---- VIDEO TẶNG KÈM CHO KHÁCH ----
+  // Cách 1 (khuyên dùng): đăng video lên YouTube / TikTok / Google Drive (chế độ "Bất kỳ ai có đường liên kết"),
+  //                       rồi dán link vào "link". YouTube & Google Drive sẽ phát ngay trên trang.
+  // Cách 2: chép file .mp4 (nên nén dưới 20MB) vào thư mục videos/ rồi ghi "file", vd "videos/video-tang-kem.mp4"
+  // Để trống cả "file" và "link" = ẩn khung video.
+  video: {
+    file: "",
+    link: "",
+    doc: true,                           // true = video dọc (9:16, kiểu TikTok/Reels), false = video ngang (16:9)
+    poster: "images/gallery/pregrad-giang-duong-01.jpg", // ảnh bìa cho file .mp4
+    tieuDe: "Video kỷ niệm tặng kèm",
+    moTa: "Quà nhỏ tụi mình gửi kèm bộ ảnh"
+  },
+
+  // ---- GỢI Ý ĐỊA ĐIỂM (hiện khi khách gõ ô "Địa điểm" trong form đặt lịch) ----
+  goiYDiaDiem: ["Tại trường của bạn", "Giảng đường / hội trường", "Thư viện", "Ngoài trời – hoàng hôn", "Studio"],
+
+  // ---- CHECKLIST CHUẨN BỊ (thêm / bớt dòng thoải mái) ----
+  checklist: [
+    { nhom: "Trang phục", items: ["Áo dài / vest / đồng phục đã ủi phẳng", "Lễ phục tốt nghiệp & mũ (kèm tua mũ)", "Giày phù hợp + 1 đôi dép đi lại", "Phụ kiện: kẹp tóc, cà vạt, nơ, trang sức"] },
+    { nhom: "Làm đẹp", items: ["Đặt lịch makeup / làm tóc trước", "Son, phấn, lược để dặm lại"] },
+    { nhom: "Đạo cụ", items: ["Hoa / bó hoa tốt nghiệp", "Bảng tên, bảng chữ, bóng bay", "Đồ kỷ niệm (gấu bông, bằng khen, sách…)"] },
+    { nhom: "Đồ cá nhân", items: ["Giấy tờ (thẻ SV/CCCD nếu vào trường)", "Nước uống & khăn giấy", "Sạc dự phòng", "Áo khoác / ô phòng khi trời nắng mưa"] }
+  ],
+
+  meoTaoDang: [
+    { t: "Thả lỏng vai", d: "Hít sâu, hạ vai, nghiêng nhẹ người 45° so với máy – dáng sẽ thon gọn hơn." },
+    { t: "Tay có việc để làm", d: "Cầm hoa, chỉnh mũ, vén tóc, nắm tay bạn… tay tự nhiên thì ảnh cũng tự nhiên." },
+    { t: "Đi và cười", d: "Bước chậm về phía máy và nói chuyện với nhau – ảnh candid đẹp nhất thường đến từ đây." },
+    { t: "Nhìn xa, không nhìn máy", d: "Thỉnh thoảng nhìn ra xa hoặc nhìn nhau, khung hình sẽ có chiều sâu cảm xúc." }
+  ],
+
+  mauTrangPhuc: [
+    { concept: "Cổng trường / Thư viện", goiY: "Be, nâu, kem, trắng ngà – tránh neon", mau: ["#E9DCC3", "#9B7B55", "#F5EFE6"] },
+    { concept: "Studio tối giản", goiY: "Đen, trắng, xám tro – tối giản đồng bộ", mau: ["#111111", "#F5F5F5", "#8C8C8C"] },
+    { concept: "Hoàng hôn", goiY: "Trắng, vàng bơ, pastel nhẹ – bắt nắng", mau: ["#FFFFFF", "#F6E3A1", "#F4C7B8"] },
+    { concept: "Retro film", goiY: "Đỏ đô, xanh rêu, mù tạt, kẻ caro", mau: ["#7A1F2B", "#4F5D3A", "#D1A23D"] }
+  ],
+
+  quyTrinh: [
+    { t: "Nhắn tư vấn", d: "Inbox Facebook hoặc gọi/Zalo – kể tụi mình nghe về ngày vui của bạn." },
+    { t: "Chốt concept & lịch", d: "Cùng chọn concept, địa điểm, màu ảnh và khung giờ đẹp nhất." },
+    { t: "Đặt cọc", d: "Cọc 30% để giữ lịch, tụi mình gửi xác nhận chi tiết qua tin nhắn." },
+    { t: "Chụp", d: "Thả lỏng, vui hết mình – pose dáng đã có tụi mình lo." },
+    { t: "Chọn ảnh & retouch", d: "Bạn chọn ảnh yêu thích, tụi mình retouch tỉ mỉ (3 lần chỉnh sửa)." },
+    { t: "Nhận file qua Google Drive", d: "Nhận full file gốc + ảnh hoàn thiện, lưu giữ trọn khoảnh khắc." }
+  ]
+};
+</script>
+
+<style>
+/* ==========================================================================
+   MÀU & KIỂU CHỮ – tone sáng: kem ngà, trắng, vàng golden (KHÔNG dùng nền tối)
+   ========================================================================== */
+:root{
+  --bg:#FBF7EF;          /* nền trang – kem ngà */
+  --bg-alt:#F5EDDC;      /* nền section xen kẽ – kem đậm */
+  --bg-white:#FFFFFF;    /* nền section xen kẽ – trắng */
+  --bg-foot:#EFE4CC;     /* nền footer – kem đậm */
+  --card:#FFFFFF; --card2:#FFFCF6;
+  --gold:#C9A24B;        /* vàng golden chủ đạo */
+  --gold-2:#E5B85C;      /* vàng sáng */
+  --gold-3:#A67C28;      /* vàng đậm – hover / chữ nhấn */
+  --grad:linear-gradient(135deg,#F2D388,#E5B85C,#B8872F);           /* nút & điểm nhấn */
+  --grad-text:linear-gradient(135deg,#C9A24B 0%,#A67C28 55%,#8A6420 100%); /* chữ vàng – đậm hơn để dễ đọc trên nền sáng */
+  --text:#2A2118;        /* chữ chính – nâu đậm */
+  --text-2:#4A3D2E;      /* chữ đoạn văn */
+  --muted:#7A6C5A;       /* chữ phụ */
+  --line:#EADFC6;        /* viền mảnh */
+  --line-2:#DCC79A;      /* viền nhấn */
+  --shadow:0 10px 30px -12px rgba(184,135,47,.12),0 2px 8px -4px rgba(184,135,47,.12);
+  --shadow-lg:0 22px 48px -22px rgba(184,135,47,.32);
+  --r:24px; --r-sm:16px;
+  --serif:"Playfair Display",Georgia,serif;
+  --sans:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --nav-h:68px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+/* Số đứng đều cho mọi con số (giá, thống kê, ngày) – tránh kiểu số thấp cổ điển của Playfair */
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.65;overflow-x:hidden;
+  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom))}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit;color:inherit;font-variant-numeric:lining-nums tabular-nums}
+button{cursor:pointer;background:none;border:0}
+:focus-visible{outline:2px solid var(--gold-3);outline-offset:3px;border-radius:8px}
+.wrap{width:100%;max-width:1180px;margin:0 auto;padding:0 18px}
+.serif{font-family:var(--serif)}
+.gold-text{background:var(--grad-text);-webkit-background-clip:text;background-clip:text;color:transparent}
+.muted{color:var(--muted)}
+.eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-3);font-weight:600}
+h1,h2,h3,h4{font-family:var(--serif);font-weight:700;line-height:1.2;letter-spacing:-.01em;color:var(--text)}
+h1 em,h2 em,h3 em{font-style:italic;font-weight:600}
+h2.section-title{font-size:clamp(28px,6vw,44px);margin:6px 0 10px}
+.section-head{text-align:center;max-width:640px;margin:0 auto 28px}
+.section-head p{color:var(--muted)}
+.band-white{background:var(--bg-white)}
+.band-alt{background:var(--bg-alt)}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 24px;border-radius:999px;font-weight:600;font-size:15px;transition:transform .2s,box-shadow .2s,background .2s,border-color .2s,color .2s;white-space:nowrap}
+.btn-gold{background:var(--grad);color:var(--text);box-shadow:0 10px 24px -12px rgba(184,135,47,.7)}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 14px 30px -12px rgba(184,135,47,.8)}
+.btn-ghost{border:1.5px solid var(--gold);color:var(--text);background:transparent}
+.btn-ghost:hover{border-color:var(--gold-3);color:var(--gold-3);background:rgba(201,162,75,.06)}
+.btn-sm{min-height:44px;padding:0 18px;font-size:14px}
+.btn-block{width:100%}
+.btn svg{width:18px;height:18px;flex:none}
+
+/* ---------- Card ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);position:relative}
+
+/* ---------- Header ---------- */
+.header{position:sticky;top:0;z-index:50;background:rgba(251,247,239,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.header .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;min-height:44px}
+.brand .mark{width:38px;height:32px;color:var(--text)}
+.wordmark{font-family:var(--sans);font-weight:800;font-size:20px;letter-spacing:-.02em;color:var(--text)}
+.wordmark .dot{color:var(--gold)}
+.top-tabs{display:none;gap:4px;background:var(--card);border:1px solid var(--line);padding:4px;border-radius:999px}
+.top-tabs button{min-height:40px;padding:0 18px;border-radius:999px;font-size:14px;font-weight:500;color:var(--muted);transition:.2s}
+.top-tabs button:hover{color:var(--gold-3)}
+.top-tabs button.active{background:var(--grad);color:var(--text);font-weight:600}
+.header .cta{display:none}
+
+/* ---------- Bottom nav (mobile) ---------- */
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.96);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);box-shadow:0 -8px 24px -16px rgba(184,135,47,.35);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom)}
+.bottom-nav button{height:var(--nav-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11.5px;font-weight:500;color:var(--muted);position:relative}
+.bottom-nav svg{width:22px;height:22px}
+.bottom-nav button.active{color:var(--gold-3);font-weight:600}
+.bottom-nav button.active::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;background:var(--grad);border-radius:0 0 2px 2px}
+
+/* ---------- Hero ---------- */
+.hero{padding:28px 0 44px;background:radial-gradient(900px 500px at 90% 0%,rgba(229,184,92,.16),transparent 60%),var(--bg)}
+.hero .wrap{display:grid;gap:30px;align-items:center}
+.promo-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-2);border-radius:999px;padding:6px 14px 6px 8px;font-size:12px;color:var(--gold-3);background:var(--card)}
+.promo-pill b{background:var(--grad);color:var(--text);border-radius:999px;padding:2px 10px;font-size:11px;letter-spacing:.06em}
+.hero h1{font-size:clamp(36px,9vw,64px);margin:18px 0 14px;font-weight:700}
+.hero .slogan{font-size:clamp(17px,4.4vw,21px);color:var(--text);font-weight:500;max-width:520px}
+.hero .sub{margin-top:8px;color:var(--muted);font-size:15px}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.hero-stats{display:flex;gap:26px;margin-top:30px;flex-wrap:wrap}
+.hero-stats div{font-size:13px;color:var(--muted)}
+.hero-stats strong{display:block;font-family:var(--sans);font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--gold-3)}
+
+/* Khung ảnh kiểu ảnh in (polaroid nhẹ) – giữ nguyên màu ảnh, không phủ lớp tối */
+.polaroid{background:#fff;padding:10px 10px 0;border-radius:22px;border:1px solid var(--line);box-shadow:var(--shadow-lg);position:relative}
+.polaroid .ph-img{border-radius:14px;overflow:hidden;background:var(--bg-alt);position:relative}
+.polaroid img{width:100%;height:100%;object-fit:cover}
+.polaroid figcaption{display:flex;align-items:center;gap:10px;padding:12px 6px 14px;font-size:13px;color:var(--muted);line-height:1.4}
+.polaroid figcaption b{font-family:var(--serif);font-size:16px;color:var(--text);display:block}
+.polaroid figcaption .mark{width:36px;height:30px;color:var(--text);flex:none}
+.hero-visual{max-width:560px;width:100%;justify-self:center}
+.hero-visual .ph-img{aspect-ratio:4/5;max-height:70vh}
+.hero-visual::before{content:"";position:absolute;inset:-14px 18px auto auto;width:90px;height:90px;border-radius:50%;background:var(--grad);opacity:.35;filter:blur(18px);z-index:-1}
+
+/* ---------- Story ---------- */
+.story{padding:48px 0}
+.story .card{padding:28px 22px;overflow:hidden}
+.story .card::before{content:"“";position:absolute;right:18px;top:-30px;font-family:var(--serif);font-size:180px;line-height:1;color:rgba(201,162,75,.14)}
+.story-lead{font-family:var(--serif);font-size:clamp(22px,5.2vw,30px);line-height:1.35;font-weight:600}
+.story-body{color:var(--text-2);margin-top:16px;display:grid;gap:12px;font-size:15.5px}
+.story-body.clamped{max-height:9.5em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 55%,transparent);mask-image:linear-gradient(#000 55%,transparent)}
+.story-body strong{color:var(--gold-3);font-weight:600}
+.story-sign{margin-top:16px;font-family:var(--serif);font-style:italic;color:var(--gold-3);font-size:18px}
+.story-toggle{margin-top:14px}
+
+/* ---------- Ảnh khách & video ---------- */
+.moments{padding:52px 0 56px}
+.moments-grid{display:grid;gap:22px}
+.moment{cursor:zoom-in;display:block;width:100%;text-align:left;transition:transform .35s,box-shadow .35s}
+.moment .ph-img{aspect-ratio:3/2}
+.moment img{transition:transform .6s}
+.moment:hover{transform:translateY(-4px) rotate(-.4deg)}
+.moment:hover img{transform:scale(1.03)}
+.moment .chip-tag{position:absolute;top:20px;left:20px;z-index:2;background:rgba(255,255,255,.92);color:var(--gold-3);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;border-radius:999px;border:1px solid var(--line)}
+.video-card .ph-img{aspect-ratio:9/16;max-height:72vh;margin:0 auto}
+.video-card.landscape .ph-img{aspect-ratio:16/9;max-height:none}
+.video-card video,.video-card iframe{width:100%;height:100%;display:block;border:0;background:var(--bg-alt);object-fit:cover}
+.video-card .gift{position:absolute;top:20px;left:20px;z-index:2;background:var(--grad);color:var(--text);font-size:11px;font-weight:700;letter-spacing:.06em;padding:5px 10px;border-radius:999px}
+.video-link{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;height:100%;color:var(--text);background:radial-gradient(circle at 50% 40%,#fff,var(--bg-alt));text-align:center;padding:20px}
+.video-link .play{width:68px;height:68px;border-radius:50%;background:var(--grad);display:grid;place-items:center;box-shadow:var(--shadow-lg)}
+.video-link .play svg{width:26px;height:26px;margin-left:3px}
+.moments-cta{text-align:center;margin-top:28px}
+.placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:12.5px;width:100%;height:100%;
+  background:repeating-linear-gradient(135deg,rgba(201,162,75,.06) 0 12px,transparent 12px 24px),var(--bg-alt)}
+.placeholder svg{width:44px;height:38px;color:var(--gold)}
+
+/* ---------- Tabs content ---------- */
+.tabs-anchor{scroll-margin-top:70px}
+.panel{display:none;padding:40px 0 64px}
+.panel.active{display:block;animation:panelIn .45s ease}
+@keyframes panelIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ---------- Guest switch ---------- */
+.switch-bar{position:sticky;top:64px;z-index:20;padding:10px 18px;margin:0 -18px 18px;background:linear-gradient(var(--bg) 70%,rgba(251,247,239,0))}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;max-width:520px;margin:0 auto;box-shadow:var(--shadow)}
+.seg button{min-height:44px;border-radius:999px;font-size:14px;font-weight:600;color:var(--muted);transition:.2s;line-height:1.15}
+.seg button small{display:block;font-size:10.5px;font-weight:400;opacity:.85}
+.seg button.active{background:var(--grad);color:var(--text)}
+
+/* ---------- Price cards ---------- */
+.price-grid{display:grid;gap:18px}
+.pcard{padding:24px 20px 20px;display:flex;flex-direction:column;transition:transform .25s,border-color .25s,box-shadow .25s}
+.pcard:hover{transform:translateY(-3px);border-color:var(--line-2);box-shadow:var(--shadow-lg)}
+.pcard.is-picked{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),var(--shadow-lg)}
+.pcard .ribbon{position:absolute;top:16px;right:16px;background:var(--grad);color:var(--text);font-size:10.5px;font-weight:700;letter-spacing:.08em;padding:5px 10px;border-radius:999px}
+.pcard .ic{width:46px;height:46px;border-radius:16px;display:grid;place-items:center;border:1px solid var(--line);font-size:20px;background:var(--bg)}
+.pcard h3{font-size:25px;margin-top:14px}
+.pcard .ph{color:var(--muted);font-size:13.5px;margin-top:2px}
+.prices{margin:18px 0 6px;display:grid;gap:8px}
+.prow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:16px;border:1px solid transparent;background:var(--bg);transition:.25s;text-align:left;width:100%}
+.prow .lbl{display:flex;flex-direction:column;min-width:0}
+.prow .lbl b{font-size:14px;font-weight:600;color:var(--text)}
+.prow .lbl span{font-size:12px;color:var(--muted)}
+.prow .val{text-align:right;flex:none}
+.prow .amount{font-family:var(--sans);font-weight:800;font-size:22px;letter-spacing:-.02em;line-height:1.1;background:var(--grad-text);-webkit-background-clip:text;background-clip:text;color:transparent}
+.prow .unit{font-size:12px;color:var(--muted);font-weight:500}
+.prow s{display:block;font-size:12px;color:#A89A86}
+.prow.hl{border-color:var(--line-2);background:#FFF8E8}
+.prow.hl .amount{font-size:28px}
+.prow.dim{opacity:.6}
+button.prow{cursor:pointer}
+button.prow:hover{border-color:var(--line)}
+.prow .contact{font-weight:700;color:var(--gold-3);font-size:15px}
+.benefits{list-style:none;display:grid;gap:9px;margin:16px 0;padding-top:16px;border-top:1px dashed var(--line)}
+.benefits li{display:flex;gap:10px;font-size:14px;color:var(--text-2);align-items:flex-start}
+.benefits li svg{width:18px;height:18px;flex:none;margin-top:2px;color:var(--gold)}
+.incl{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text-2);margin:16px 0 12px;padding-top:14px;border-top:1px dashed var(--line)}
+.incl svg{width:18px;height:18px;flex:none;color:var(--gold)}
+.incl a{color:var(--gold-3);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.extras{background:var(--bg-alt);border-radius:14px;padding:12px 14px;margin-bottom:16px}
+.extras-h{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-3);font-weight:700;margin-bottom:6px}
+.extra-row{padding:7px 0}
+.extra-row+.extra-row{border-top:1px solid var(--line)}
+.extra-row .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px}
+.extra-row .top span{color:var(--text);font-weight:500}
+.extra-row .top b{color:var(--gold-3);font-weight:700;white-space:nowrap;font-variant-numeric:lining-nums tabular-nums}
+.extra-row small{display:block;font-size:12px;color:var(--muted);margin-top:2px;line-height:1.45}
+/* Quyền lợi chung + Phụ thu (1 khung chung) */
+.perks{margin-top:28px;padding:24px 20px;display:grid;gap:22px}
+@media(min-width:900px){.perks{grid-template-columns:1.25fr 1fr;padding:32px;gap:32px;align-items:start}}
+.perks h3{font-family:var(--serif);font-size:26px;font-weight:600;margin:6px 0 14px}
+.perks-list{list-style:none;display:grid;grid-template-columns:1fr;gap:12px 24px}
+@media(min-width:560px){.perks-list{grid-template-columns:1fr 1fr}}
+.perks-list li{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;color:var(--text-2)}
+.perks-list li svg{width:20px;height:20px;flex:none;margin-top:1px;color:var(--gold)}
+.perks .extras{margin:0;border:1px solid var(--line-2);background:var(--bg);border-radius:18px;padding:18px}
+.perks .extras-h{margin-bottom:8px}
+.perks .extra-row{padding:10px 0}
+.perks .extra-row+.extra-row{border-top:1px dashed var(--line-2)}
+.perks .extra-row .top{font-size:15px}
+.extras-note{font-size:12.5px;font-style:italic;color:var(--muted);margin-top:10px;line-height:1.5}
+.pcard .btn{margin-top:auto}
+.price-note{margin-top:22px;text-align:center;color:var(--muted);font-size:13.5px}
+.price-note b{color:var(--gold-3)}
+
+/* ---------- FAQ ---------- */
+.faq{max-width:760px;margin:60px auto 0;display:grid;gap:10px}
+.faq details{border:1px solid var(--line);border-radius:20px;background:var(--card);overflow:hidden;transition:border-color .2s;box-shadow:var(--shadow)}
+.faq details[open]{border-color:var(--line-2)}
+.faq summary{list-style:none;cursor:pointer;padding:16px 18px;min-height:56px;display:flex;align-items:center;justify-content:space-between;gap:14px;font-weight:600;font-size:15px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary i{width:26px;height:26px;border-radius:50%;border:1px solid var(--line-2);flex:none;position:relative;transition:transform .3s}
+.faq summary i::before,.faq summary i::after{content:"";position:absolute;left:50%;top:50%;width:10px;height:1.5px;background:var(--gold-3);transform:translate(-50%,-50%)}
+.faq summary i::after{transform:translate(-50%,-50%) rotate(90deg);transition:transform .3s}
+.faq details[open] summary i::after{transform:translate(-50%,-50%) rotate(0)}
+.faq .ans{padding:0 18px 18px;color:var(--muted);font-size:14.5px}
+
+/* ---------- Prep ---------- */
+.prep-grid{display:grid;gap:18px}
+.progress-card{padding:22px}
+.progress-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.progress-top .pct{font-family:var(--sans);font-size:40px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.bar{height:10px;border-radius:999px;background:var(--bg-alt);overflow:hidden;margin-top:14px}
+.bar i{display:block;height:100%;width:0;background:var(--grad);border-radius:999px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.cgroup{padding:18px 18px 8px}
+.cgroup h3{margin-bottom:6px;font-family:var(--sans);font-weight:700;color:var(--gold-3);font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+.citem{display:flex;align-items:center;gap:12px;min-height:48px;padding:6px 0;border-bottom:1px solid var(--line);cursor:pointer;font-size:15px}
+.citem:last-child{border-bottom:0}
+.citem input{position:absolute;opacity:0;pointer-events:none}
+.citem .box{width:24px;height:24px;border-radius:8px;border:1.5px solid var(--line-2);flex:none;display:grid;place-items:center;transition:.2s;background:#fff}
+.citem .box svg{width:14px;height:14px;color:var(--text);opacity:0;transform:scale(.5);transition:.2s}
+.citem input:checked + .box{background:var(--grad);border-color:transparent}
+.citem input:checked + .box svg{opacity:1;transform:none}
+.citem input:checked ~ span{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--gold)}
+.citem input:focus-visible + .box{outline:2px solid var(--gold-3);outline-offset:2px}
+.sub-title{font-size:clamp(24px,5vw,32px);margin:48px 0 16px}
+.tips{display:grid;gap:12px;grid-template-columns:1fr}
+.tip{padding:20px}
+.tip .n{font-family:var(--sans);font-size:26px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.tip h4{font-size:17px;margin:8px 0 4px}
+.tip p{font-size:14px;color:var(--muted)}
+.swatches{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.swatches i{width:18px;height:18px;border-radius:50%;border:1px solid var(--line-2);display:inline-block}
+.timeline{list-style:none;position:relative;display:grid;gap:14px;padding-left:4px}
+.timeline::before{content:"";position:absolute;left:23px;top:20px;bottom:20px;width:2px;background:linear-gradient(var(--gold),rgba(201,162,75,.15))}
+.timeline li{display:flex;gap:16px;align-items:flex-start;position:relative}
+.timeline .step{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:800;background:#fff;border:1.5px solid var(--gold);color:var(--gold-3);z-index:1}
+.timeline li:last-child .step{background:var(--grad);color:var(--text);border:0}
+.timeline .tbody{padding:14px 16px;flex:1;border-radius:20px}
+.timeline h4{font-size:16px}
+.timeline p{font-size:14px;color:var(--muted)}
+
+/* ---------- Booking ---------- */
+.book-grid{display:grid;gap:18px;align-items:start}
+.form-card{padding:22px}
+.form-grid{display:grid;gap:14px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.field .lab{font-size:13px;font-weight:600;color:var(--text-2)}
+.field label i{color:var(--gold-3);font-style:normal}
+.input{width:100%;min-height:48px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--bg);font-size:16px;transition:border-color .2s,background .2s,box-shadow .2s;color:var(--text)}
+.input:focus{outline:none;border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(229,184,92,.2)}
+.input::placeholder{color:#B3A590}
+select.input{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A67C28' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:18px;padding-right:42px}
+input[type=date].input{color-scheme:light}
+textarea.input{min-height:96px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hint{font-size:12px;color:var(--muted)}
+.hint.warn{color:#B5612A}
+.stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:14px;background:var(--bg);overflow:hidden}
+.stepper button{width:48px;height:48px;font-size:22px;color:var(--gold-3);flex:none}
+.stepper button:hover{background:rgba(229,184,92,.14)}
+.stepper input{flex:1;min-width:0;text-align:center;background:transparent;border:0;height:48px;font-size:17px;font-weight:600}
+.stepper input:focus{outline:none}
+.stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.stepper input[type=number]{-moz-appearance:textfield}
+.quote{padding:24px 20px}
+.countdown{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:18px;background:#FFF8E8;border:1px solid var(--line-2);margin-bottom:18px}
+.countdown .num{font-family:var(--sans);font-size:36px;font-weight:800;letter-spacing:-.03em;line-height:1;min-width:52px;text-align:center}
+.countdown p{font-size:14px;color:var(--text-2);line-height:1.4}
+.countdown p small{display:block;color:var(--muted);font-size:12px}
+.qline{display:flex;justify-content:space-between;gap:12px;padding:9px 0;font-size:14px;border-bottom:1px dashed var(--line)}
+.qline span:first-child{color:var(--muted)}
+.qline span:last-child{text-align:right;font-weight:600}
+.qtotal{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:14px}
+.qtotal .big{font-family:var(--sans);font-weight:800;font-size:clamp(30px,8vw,38px);letter-spacing:-.02em;line-height:1}
+.qdeposit{display:flex;justify-content:space-between;margin-top:10px;padding:12px 14px;border-radius:14px;background:var(--bg-alt);font-size:14px}
+.qdeposit b{color:var(--gold-3)}
+.qactions{display:grid;gap:10px;margin-top:18px}
+.msg-preview{margin-top:16px;font-size:13px;white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px;color:var(--text-2);max-height:260px;overflow:auto;font-family:var(--sans)}
+details.preview summary{cursor:pointer;font-size:13px;color:var(--gold-3);margin-top:14px;min-height:44px;display:flex;align-items:center}
+.reset{margin-top:6px;font-size:13px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;min-height:44px}
+.reset:hover{color:#B5612A}
+
+/* ---------- Footer (nền kem đậm, KHÔNG đen) ---------- */
+footer{background:var(--bg-foot);border-top:1px solid var(--line-2);padding:44px 0 30px}
+footer .wrap{display:grid;gap:22px;text-align:center;justify-items:center}
+.f-brand{display:flex;flex-direction:column;align-items:center;gap:8px}
+.f-brand .mark{width:72px;height:60px;color:var(--text)}
+.f-brand .wordmark{font-size:24px}
+.f-brand p{font-size:13px;color:var(--muted)}
+.socials{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.soc{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--grad);color:var(--text);transition:transform .2s;box-shadow:0 8px 18px -10px rgba(166,124,40,.7)}
+.soc:hover{transform:translateY(-3px) rotate(-6deg)}
+.soc svg{width:22px;height:22px}
+.f-brand .socials{margin-top:8px}
+.f-col{display:flex;flex-direction:column;align-items:center;gap:12px}
+.f-h{font-size:12.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-3);font-weight:700}
+.f-list{list-style:none;display:grid;gap:4px}
+.f-list li,.f-list a{display:flex;align-items:center;gap:10px;min-height:44px;font-size:15px;color:var(--text)}
+.f-list a:hover{color:var(--gold-3)}
+.f-list svg{width:20px;height:20px;flex:none;color:var(--gold-3)}
+.copy{font-size:12.5px;color:var(--muted)}
+
+/* ---------- Floating ---------- */
+.fab{position:fixed;right:14px;bottom:calc(var(--nav-h) + 14px + env(safe-area-inset-bottom));z-index:55;display:flex;flex-direction:column;gap:10px}
+.fab a{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;box-shadow:0 10px 24px -8px rgba(166,124,40,.55)}
+.fab a svg{width:24px;height:24px}
+.fab .call{background:var(--grad);color:var(--text);animation:ring 2.6s infinite}
+.fab .mess{background:#fff;border:1.5px solid var(--gold);color:var(--gold-3)}
+@keyframes ring{0%,100%{box-shadow:0 0 0 0 rgba(229,184,92,.55)}60%{box-shadow:0 0 0 12px rgba(229,184,92,0)}}
+
+/* ---------- Toast ---------- */
+.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 20px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:#fff;border:1px solid var(--gold);color:var(--text);box-shadow:var(--shadow-lg);padding:12px 18px;border-radius:999px;font-size:14px;z-index:90;opacity:0;pointer-events:none;transition:.3s;max-width:calc(100% - 40px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- Lightbox (nền kem sáng) ---------- */
+.gfilter{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 auto 24px}
+.gfilter button{min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line-2);background:var(--card);font-size:14px;color:var(--text-2)}
+.gfilter button.active{background:var(--grad);border-color:transparent;color:var(--text);font-weight:600}
+.ggrid{display:grid;grid-template-columns:1fr;gap:20px}
+.ggrid .moment .ph-img{aspect-ratio:4/5}
+@media(min-width:560px){.ggrid{grid-template-columns:1fr 1fr}}
+@media(min-width:960px){.ggrid{grid-template-columns:repeat(3,1fr)}}
+.soon{margin-top:44px;padding:30px 20px;text-align:center;background:var(--card2)}
+.soon-title{font-family:var(--serif);font-weight:600;font-size:clamp(24px,5vw,34px);line-height:1.25;margin:10px auto 12px;max-width:640px}
+.soon-text{color:var(--text-2);max-width:620px;margin:0 auto}
+.soon-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:22px 0 26px}
+.soon-grid{display:grid;gap:14px;text-align:left}
+@media(min-width:700px){.soon-grid{grid-template-columns:repeat(3,1fr)}}
+.soon-card{position:relative;background:var(--bg);border:1.5px dashed var(--gold);border-radius:var(--r-sm);padding:20px 18px;display:flex;flex-direction:column;gap:8px;cursor:default;user-select:none}
+.soon-card .cam{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#FFF8E8;border:1px solid var(--line-2);color:var(--gold)}
+.soon-card .cam svg{width:24px;height:24px}
+.soon-card h4{font-family:var(--serif);font-size:18px}
+.soon-card p{font-size:13.5px;color:var(--muted)}
+.soon-card .cs{position:absolute;top:16px;right:16px;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-3);background:#fff;border:1px solid var(--line-2);border-radius:999px;padding:4px 10px}
+.soon-band{background:var(--bg-alt);border-top:1px solid var(--line);padding:16px 0}
+.soon-band .wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;text-align:center}
+.soon-band-ic{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#fff;border:1px solid var(--line-2);color:var(--gold)}
+.soon-band-ic svg{width:20px;height:20px}
+.soon-band p{font-size:14px;color:var(--text-2);display:flex;flex-direction:column}
+.soon-band p b{font-size:11px;letter-spacing:.2em;color:var(--gold-3)}
+.lb{position:fixed;inset:0;z-index:100;background:rgba(251,247,239,.97);display:none;flex-direction:column;align-items:center;justify-content:center;padding:64px 12px 20px;touch-action:pan-y}
+.lb.open{display:flex}
+.lb .stage{width:100%;max-width:1100px;flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+.lb .stage img{max-height:78vh;width:auto;max-width:100%;border-radius:16px;object-fit:contain;border:8px solid #fff;box-shadow:var(--shadow-lg)}
+.lb .lcap{margin-top:14px;color:var(--text);font-size:14px;text-align:center}
+.lb .lcount{color:var(--muted);font-size:12px}
+.lb .x,.lb .nav{position:absolute;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#fff;border:1px solid var(--line-2);color:var(--gold-3);box-shadow:var(--shadow)}
+.lb .x{top:12px;right:12px}
+.lb .nav{top:50%;transform:translateY(-50%)}
+.lb .prev{left:10px}.lb .next{right:10px}
+.lb svg{width:22px;height:22px}
+
+/* ---------- Reveal ---------- */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}html{scroll-behavior:auto}}
+
+/* ---------- Responsive ---------- */
+@media (min-width:600px){
+  .tips{grid-template-columns:1fr 1fr}
+  .moments-grid{grid-template-columns:1fr 1fr}
+  .moments-grid .video-card{grid-column:1/-1;max-width:420px;justify-self:center;width:100%}
+  .moments-grid .video-card.landscape{max-width:760px}
+}
+@media (min-width:900px){
+  body{padding-bottom:0}
+  .bottom-nav,.fab{display:none}
+  .toast{bottom:28px}
+  .top-tabs{display:flex}
+  .header .cta{display:inline-flex}
+  .wrap{padding:0 28px}
+  .hero{padding:60px 0 72px}
+  .hero .wrap{grid-template-columns:1.05fr .95fr;gap:60px}
+  .story{padding:72px 0}
+  .story .card{padding:44px 52px}
+  .moments{padding:72px 0 80px}
+  .moments-grid.has-video{grid-template-columns:1fr 1fr .72fr;align-items:center}
+  .moments-grid.has-video .video-card{grid-column:auto;max-width:none}
+  .moments-grid.has-video .video-card.landscape{grid-column:1/-1;max-width:760px}
+  .price-grid{grid-template-columns:1fr 1fr}
+  .switch-bar{margin:0 -28px 22px;padding-left:28px;padding-right:28px}
+  .prep-grid{grid-template-columns:1fr 1fr}
+  .prep-grid .progress-card{grid-column:1/-1}
+  .tips{grid-template-columns:repeat(4,1fr)}
+  .book-grid{grid-template-columns:1.2fr .8fr;gap:24px}
+  .form-card{padding:30px}
+  .quote{position:sticky;top:84px}
+  footer .wrap{grid-template-columns:1.4fr 1fr 1fr;text-align:left;justify-items:stretch;align-items:start;gap:32px}
+  .f-brand,.f-col{align-items:flex-start}
+  .f-brand .wordmark{font-size:22px}
+  footer .socials{justify-content:flex-start}
+}
+@media (min-width:1100px){
+  .price-grid{grid-template-columns:repeat(4,1fr)}
+  .pcard h3{font-size:23px}
+}
+@media (max-width:360px){
+  .prow .amount{font-size:19px}.prow.hl .amount{font-size:23px}
+  .row2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- Icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="goldg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2D388"/><stop offset=".5" stop-color="#E5B85C"/><stop offset="1" stop-color="#B8872F"/></linearGradient>
+  </defs>
+  <symbol id="i-logo" viewBox="540 500 730 610">
+    <g fill="none" stroke="currentColor" stroke-width="42" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1238 742V690a88 88 0 0 0-88-89h-107l-40-71H808l-44 71H655a87 87 0 0 0-87 89v80a42 42 0 0 0 42 42h31"/>
+      <path d="M568 892v98a87 87 0 0 0 87 87h495a88 88 0 0 0 88-87v-80a53 53 0 0 0-53-53H960"/>
+      <path d="M995 773a131 131 0 1 0 29 84"/>
+    </g>
+    <circle cx="891" cy="853" r="31" fill="url(#goldg)"/>
+  </symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-checkc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor" opacity=".16"/><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="m7.5 12.3 3 3 6-6.3"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linejoin="round" d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></g></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9-9-9Z"/><circle cx="8" cy="8" r="1.6" fill="currentColor"/></symbol>
+  <symbol id="i-img" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></g></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3.5 6 1 1 2-2M3.5 12l1 1 2-2M3.5 18l1 1 2-2" stroke-linejoin="round"/></g></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9.5h18M8 3v3M16 3v3"/></g></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2Z"/></symbol>
+  <symbol id="i-mess" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.4 2 2 6.1 2 11.7c0 2.9 1.2 5.5 3.2 7.2v3.5l3.1-1.7c1.1.3 2.4.5 3.7.5 5.6 0 10-4.1 10-9.6S17.6 2 12 2Zm1 12.9-2.6-2.7-5 2.7 5.5-5.8 2.6 2.7 4.9-2.7-5.4 5.8Z"/></symbol>
+  <symbol id="i-fb" viewBox="0 0 24 24"><path fill="currentColor" d="M13.5 21v-7.6h2.6l.4-3h-3V8.5c0-.9.3-1.5 1.5-1.5h1.6V4.3c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.8v3h2.6V21h3.1Z"/></symbol>
+  <symbol id="i-tt" viewBox="0 0 24 24"><path fill="currentColor" d="M16.6 5.8A4.3 4.3 0 0 1 15.5 3h-3.1v12.4a2.6 2.6 0 1 1-1.8-2.5V9.7a5.7 5.7 0 1 0 4.9 5.7V9.1a7.3 7.3 0 0 0 4.3 1.4V7.4a4.3 4.3 0 0 1-3.2-1.6Z"/></symbol>
+  <symbol id="i-ig" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/></g><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></symbol>
+  <symbol id="i-zalo" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3C6.5 3 2 6.8 2 11.5c0 2.6 1.4 4.9 3.6 6.5L5 21l3.4-1.8c1.1.3 2.3.5 3.6.5 5.5 0 10-3.8 10-8.5S17.5 3 12 3Zm-4.8 10.6H5.1l2.2-3H5.2v-1h3.2v.6l-2.2 3h2.1v.4Zm2.6.1c-.9 0-1.5-.7-1.5-1.6s.6-1.6 1.5-1.6c.3 0 .6.1.8.3v-.2h.9v3h-.9v-.2c-.2.2-.5.3-.8.3Zm2.8-.1h-.9V9.4h.9v4.2Zm2.6.1c-.9 0-1.6-.7-1.6-1.6s.7-1.6 1.6-1.6 1.6.7 1.6 1.6-.7 1.6-1.6 1.6Z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="3"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></g></symbol>
+  <symbol id="i-drive" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M8.5 3h7l6 10.5-3.5 6h-12L2.5 13.5 8.5 3Zm0 0 6 10.5h7M2.5 13.5l3.5 6M15.5 3 9 13.5h5.5"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h2l1.6-2.2h5.8L16.5 6h2A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-9Z"/><circle cx="12" cy="13" r="4"/></g></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5Z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m15 5-7 7 7 7"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+</svg>
+
+<!-- ================= HEADER ================= -->
+<header class="header">
+  <div class="wrap">
+    <a href="#" class="brand" data-goto="banggia" aria-label="GS.studio – về đầu trang">
+      <svg class="mark" aria-hidden="true"><use href="#i-logo"/></svg>
+      <span class="wordmark">GS<span class="dot">.</span>studio</span>
+    </a>
+    <nav class="top-tabs" aria-label="Điều hướng chính" id="topTabs"></nav>
+    <a class="btn btn-gold btn-sm cta" data-link="messenger" target="_blank" rel="noopener"><svg><use href="#i-mess"/></svg>Nhắn tư vấn</a>
+  </div>
+</header>
+
+<main>
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="reveal">
+        <span class="promo-pill"><b id="promoLabel">ƯU ĐÃI RA MẮT</b><span id="promoDate"></span></span>
+        <h1>Giữ cho bạn,<br><em class="gold-text">trọn khoảnh khắc</em></h1>
+        <p class="slogan">Chụp kỷ yếu &amp; tốt nghiệp • Gói ra mắt ưu đãi</p>
+        <p class="sub">Pre-Graduation, lễ tốt nghiệp, kỷ yếu – phục vụ <span id="heroArea"></span>.</p>
+        <div class="hero-actions">
+          <button class="btn btn-gold" data-goto="banggia">Xem bảng giá <svg><use href="#i-arrow"/></svg></button>
+          <a class="btn btn-ghost" data-link="facebook" target="_blank" rel="noopener"><svg><use href="#i-fb"/></svg>Nhắn Facebook</a>
+        </div>
+        <div class="hero-stats">
+          <div><strong id="statFrom"></strong>giá chỉ từ</div>
+          <div><strong>3 lần</strong>chỉnh sửa retouch</div>
+          <div><strong>Full file</strong>gốc qua Drive</div>
+        </div>
+      </div>
+      <figure class="polaroid hero-visual reveal">
+        <div class="ph-img"><img id="heroImg" alt="" fetchpriority="high" /></div>
+        <figcaption>
+          <svg class="mark" aria-hidden="true"><use href="#i-logo"/></svg>
+          <p><b>1 giây. 1 lần bấm máy.</b>1 khoảnh khắc không bao giờ quay lại lần thứ hai.</p>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ================= STORY ================= -->
+  <section class="story band-white">
+    <div class="wrap">
+      <article class="card reveal">
+        <p class="eyebrow">Chào bạn, tụi mình là GS.studio</p>
+        <p class="story-lead" style="margin-top:10px">1 giây. 1 lần bấm máy. <span class="gold-text">1 khoảnh khắc</span> không bao giờ quay lại lần thứ hai.</p>
+        <div class="story-body clamped" id="storyBody">
+          <p>Bạn có bao giờ lục lại album cũ, rồi khựng lại trước một tấm ảnh hơi nhòe, hơi lệch khung, mà vẫn thấy rưng rưng hong? Vậy thì còn những khoảnh khắc chẳng ai kịp chụp, giờ tụi nó đang nằm ở đâu ta?</p>
+          <p>GS là viết tắt của <strong>“Golden Shot”</strong>, nhưng tụi mình thích gọi nó theo một cách gần gũi hơn: <strong>giữ cho bạn, trọn khoảnh khắc.</strong></p>
+          <p>Tụi mình là những người yêu thích cầm máy. Mê lắm cái cảm giác nín thở chờ ánh nắng chiếu rọi đúng chỗ, mê luôn cái giây phút nhìn lại màn hình rồi thốt lên “trời ơi, được rồi!”. Đi theo máy ảnh đủ lâu, tụi mình nhận ra: những tấm ảnh đáng giá nhất hiếm khi là tấm tạo dáng đẹp nhất. Nó là cái run tay của chú rể lúc trao nhẫn, là giọt nước mắt mẹ lau vội, là tiếng cười giòn tan ngày thôi nôi, là cái ôm siết của đám bạn ngày tốt nghiệp. Những thứ diễn ra trong vài giây thôi, rồi trôi đi mất – nếu không có ai đứng đó để giữ lại.</p>
+          <p><strong>Và tụi mình muốn là người đứng đó.</strong></p>
+          <p>Nếu để ý logo, bạn sẽ thấy thân máy ảnh được uốn thành chữ S, ống kính là chữ G, và nằm ngay chính giữa là một chấm vàng nhỏ xíu. Chấm vàng đó là khoảnh khắc của bạn – thứ tụi mình luôn đặt ở trung tâm của mỗi khung hình.</p>
+          <p>Ngày ý nghĩa sắp tới của bạn là ngày nào? Một lễ tốt nghiệp, một buổi chụp kỷ yếu cùng cả lớp, hay chỉ đơn giản là một chiều đám bạn còn đủ mặt bên nhau? Cứ để tụi mình giữ giùm nha. Để mai này lật lại, bạn vẫn còn nguyên cảm giác của ngày hôm ấy.</p>
+          <p class="story-sign">Tụi mình – GS.studio, giữ cho bạn, trọn khoảnh khắc 📸✨</p>
+        </div>
+        <button class="btn btn-ghost btn-sm story-toggle" id="storyToggle" aria-expanded="false">Đọc tiếp câu chuyện</button>
+      </article>
+    </div>
+  </section>
+
+  <!-- ================= ẢNH KHÁCH & VIDEO ================= -->
+  <section class="moments band-alt" id="anhkhach">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">Ảnh khách thật</p>
+        <h2 class="section-title">Khoảnh khắc <em class="gold-text">tụi mình đã giữ</em></h2>
+        <p>Tụi mình mới ra mắt nên album còn mỏng, nhưng tấm nào cũng là khách thật, chụp thật. Bấm vào ảnh để xem lớn nha.</p>
+      </div>
+      <div class="moments-grid" id="moments"></div>
+      <div class="moments-cta">
+        <button class="btn btn-ghost" type="button" data-goto="concept"><svg><use href="#i-img"/></svg>Xem tất cả ảnh khách</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="tabs" class="tabs-anchor"></div>
+
+  <!-- ================= TAB 1: BẢNG GIÁ ================= -->
+  <section class="panel" id="panel-banggia" aria-labelledby="t-banggia">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">Bảng giá gói ra mắt</p>
+        <h2 class="section-title" id="t-banggia">Chọn gói <span class="gold-text">vừa ý</span> nhất</h2>
+        <p id="priceIntro"></p>
+      </div>
+      <div class="switch-bar">
+        <div class="seg" role="radiogroup" aria-label="Chọn loại khách" id="guestSeg"></div>
+      </div>
+      <div class="price-grid" id="priceGrid"></div>
+      <div class="card perks reveal" id="quyen-loi" data-perks></div>
+
+      <div class="faq" id="faq">
+        <div class="section-head reveal" style="margin-bottom:12px">
+          <p class="eyebrow">Giải đáp nhanh</p>
+          <h2 class="section-title">Câu hỏi thường gặp</h2>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TAB 2: CHUẨN BỊ ================= -->
+  <!-- ================= TAB: CONCEPT & ẢNH ================= -->
+  <section class="panel" id="panel-concept" aria-labelledby="t-concept">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">Concept &amp; Ảnh khách</p>
+        <h2 class="section-title" id="t-concept">Album <em class="gold-text">nhà Sót</em></h2>
+        <p>Toàn bộ là ảnh khách thật, chụp thật. Lọc theo loại buổi chụp và bấm vào ảnh để xem lớn nha.</p>
+      </div>
+      <div class="gfilter" role="group" aria-label="Lọc ảnh" id="gFilter"></div>
+      <div class="ggrid" id="gGrid"></div>
+      <div class="moments-cta">
+        <a class="btn btn-ghost" data-link="driveAnhKhach" target="_blank" rel="noopener"><svg><use href="#i-drive"/></svg>Xem thêm ảnh khách trên Google Drive</a>
+      </div>
+      <div class="card soon" id="sapRaMat">
+        <p class="eyebrow" data-soon="nhan"></p>
+        <h3 class="soon-title">Còn nhiều concept khác của <em class="gold-text">nhà Sót</em> đang trên đường tới ✨</h3>
+        <p class="soon-text" data-soon="noiDung"></p>
+        <div class="soon-actions">
+          <a class="btn btn-gold" data-link="facebook" target="_blank" rel="noopener"><svg><use href="#i-fb"/></svg>Theo dõi page GS.studio</a>
+          <a class="btn btn-ghost" data-link="messenger" target="_blank" rel="noopener"><svg><use href="#i-mess"/></svg>Nhắn tụi mình</a>
+        </div>
+        <div class="soon-grid" id="soonGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-chuanbi" aria-labelledby="t-chuanbi">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">Sẵn sàng lên hình</p>
+        <h2 class="section-title" id="t-chuanbi">Chuẩn bị <span class="gold-text">trước buổi chụp</span></h2>
+        <p>Tick vào từng mục khi bạn đã chuẩn bị xong – tiến độ được lưu lại trên máy của bạn.</p>
+      </div>
+      <div class="prep-grid" id="prepGrid">
+        <div class="card progress-card reveal">
+          <div class="progress-top">
+            <div><p class="eyebrow">Tiến độ chuẩn bị</p><p class="muted" id="progressText" style="font-size:14px"></p></div>
+            <div class="pct gold-text" id="progressPct">0%</div>
+          </div>
+          <div class="bar"><i id="progressBar"></i></div>
+        </div>
+      </div>
+
+      <h3 class="sub-title serif">Mẹo <span class="gold-text">tạo dáng</span></h3>
+      <div class="tips" id="tips"></div>
+
+      <h3 class="sub-title serif">Gợi ý <span class="gold-text">màu trang phục</span></h3>
+      <div class="tips" id="colors"></div>
+
+      <h3 class="sub-title serif">Quy trình <span class="gold-text">làm việc</span></h3>
+      <ol class="timeline" id="timeline"></ol>
+    </div>
+  </section>
+
+  <!-- ================= TAB 3: ĐẶT LỊCH ================= -->
+  <section class="panel" id="panel-datlich" aria-labelledby="t-datlich">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">Đặt lịch &amp; báo giá</p>
+        <h2 class="section-title" id="t-datlich">Giữ lịch cho <span class="gold-text">ngày vui</span></h2>
+        <p>Điền thông tin, xem báo giá tạm tính ngay, rồi gửi cho tụi mình qua Messenger chỉ với 1 chạm.</p>
+      </div>
+      <div class="book-grid">
+        <form class="card form-card" id="bookForm" autocomplete="on" novalidate>
+          <div class="form-grid">
+            <div class="row2">
+              <div class="field"><label for="f-hoTen">Họ tên <i>*</i></label><input class="input" id="f-hoTen" name="hoTen" placeholder="Nguyễn Văn A" autocomplete="name" /></div>
+              <div class="field"><label for="f-sdt">SĐT / Zalo <i>*</i></label><input class="input" id="f-sdt" name="sdt" inputmode="tel" placeholder="09xx xxx xxx" autocomplete="tel" /></div>
+            </div>
+            <div class="field"><label for="f-truongLop">Trường / Lớp</label><input class="input" id="f-truongLop" name="truongLop" placeholder="VD: ĐH Kinh tế TP.HCM – K46" /></div>
+            <div class="field"><label for="f-goi">Loại gói</label><select class="input" id="f-goi" name="goi"></select></div>
+            <div class="field"><span class="lab">Loại khách</span><div class="seg" role="radiogroup" aria-label="Loại khách" id="formSeg" style="margin:0;max-width:none"></div></div>
+            <div class="row2">
+              <div class="field"><label for="f-soNguoi">Số người</label>
+                <div class="stepper"><button type="button" data-step="soNguoi" data-d="-1" aria-label="Giảm số người">−</button><input type="number" id="f-soNguoi" name="soNguoi" min="1" max="200" inputmode="numeric" /><button type="button" data-step="soNguoi" data-d="1" aria-label="Tăng số người">+</button></div>
+                <span class="hint" id="soNguoiHint"></span>
+              </div>
+              <div class="field"><label for="f-ngay">Ngày chụp mong muốn</label><input class="input" type="date" id="f-ngay" name="ngay" /></div>
+            </div>
+            <div class="row2">
+              <div class="field"><label for="f-gio">Giờ ưu tiên</label>
+                <select class="input" id="f-gio" name="gio">
+                  <option value="">Chọn khung giờ</option>
+                  <option>Sáng sớm (6h – 8h)</option>
+                  <option>Buổi sáng (8h – 11h)</option>
+                  <option>Buổi chiều (14h – 16h)</option>
+                  <option>Hoàng hôn (16h – 18h)</option>
+                  <option>Linh hoạt theo lịch lễ</option>
+                </select>
+              </div>
+              <div class="field"><label for="f-diaDiem">Địa điểm / Concept</label><input class="input" id="f-diaDiem" name="diaDiem" list="placeList" placeholder="VD: Giảng đường trường mình" /><datalist id="placeList"></datalist></div>
+            </div>
+            <div class="row2">
+              <div class="field"><label for="f-extraGio">Extra giờ chụp</label>
+                <div class="stepper"><button type="button" data-step="extraGio" data-d="-1" aria-label="Giảm giờ">−</button><input type="number" id="f-extraGio" name="extraGio" min="0" max="12" inputmode="numeric" /><button type="button" data-step="extraGio" data-d="1" aria-label="Tăng giờ">+</button></div>
+                <span class="hint" id="extraGioHint"></span>
+              </div>
+              <div class="field"><label for="f-extraAnh">Extra ảnh retouch</label>
+                <div class="stepper"><button type="button" data-step="extraAnh" data-d="-10" aria-label="Giảm 10 ảnh">−</button><input type="number" id="f-extraAnh" name="extraAnh" min="0" max="500" step="10" inputmode="numeric" /><button type="button" data-step="extraAnh" data-d="10" aria-label="Tăng 10 ảnh">+</button></div>
+                <span class="hint" id="extraAnhHint"></span>
+              </div>
+            </div>
+            <div class="field"><label for="f-ghiChu">Ghi chú</label><textarea class="input" id="f-ghiChu" name="ghiChu" placeholder="Trang phục dự kiến, số lượng bạn trong nhóm, mong muốn đặc biệt…"></textarea></div>
+          </div>
+        </form>
+
+        <aside class="card quote" aria-live="polite">
+          <div class="countdown" id="countdown"></div>
+          <p class="eyebrow">Báo giá tạm tính</p>
+          <div id="quoteLines" style="margin-top:8px"></div>
+          <div class="qtotal"><span class="muted" style="font-size:14px">Tổng tạm tính</span><span class="big gold-text" id="qTotal">0đ</span></div>
+          <div class="qdeposit"><span>Đặt cọc đề xuất (<span id="qPct"></span>%)</span><b id="qDeposit">0đ</b></div>
+          <div class="qactions">
+            <button class="btn btn-gold btn-block" id="sendMess" type="button"><svg><use href="#i-mess"/></svg>Gửi qua Messenger / Facebook</button>
+            <button class="btn btn-ghost btn-block" id="copyMsg" type="button"><svg><use href="#i-copy"/></svg>Sao chép tin nhắn đặt lịch</button>
+            <a class="btn btn-ghost btn-block" id="sendZalo" target="_blank" rel="noopener"><svg><use href="#i-zalo"/></svg>Nhắn qua Zalo</a>
+          </div>
+          <details class="preview"><summary>Xem trước tin nhắn</summary><div class="msg-preview" id="msgPreview"></div></details>
+          <button class="reset" type="button" id="resetBtn">Xóa dữ liệu đã lưu</button>
+        </aside>
+      </div>
+      <div class="card perks reveal" data-perks></div>
+    </div>
+  </section>
+</main>
+
+<aside class="soon-band" aria-label="Concept sắp ra mắt">
+  <div class="wrap">
+    <span class="soon-band-ic"><svg aria-hidden="true"><use href="#i-cam"/></svg></span>
+    <p><b data-soon="nhan"></b><span data-soon="bangNho"></span></p>
+    <a class="btn btn-gold btn-sm" data-link="facebook" target="_blank" rel="noopener"><svg><use href="#i-fb"/></svg>Theo dõi page</a>
+  </div>
+</aside>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap">
+    <div class="f-brand">
+      <svg class="mark" role="img" aria-label="Logo GS.studio"><use href="#i-logo"/></svg>
+      <span class="wordmark">GS<span class="dot">.</span>studio</span>
+      <p>Golden Shot – giữ cho bạn, trọn khoảnh khắc. Chụp kỷ yếu, pre-graduation &amp; lễ tốt nghiệp.</p>
+      <div class="socials" id="socials"></div>
+    </div>
+    <div class="f-col"><p class="f-h">Liên hệ</p><ul class="f-list" id="footContact"></ul></div>
+    <div class="f-col"><p class="f-h">Khu vực</p><ul class="f-list" id="footArea"></ul></div>
+  </div>
+  <div class="wrap"><p class="copy" style="margin-top:22px;text-align:center;grid-column:1/-1">© 2026 GS.studio • Golden Shot – giữ cho bạn, trọn khoảnh khắc.</p></div>
+</footer>
+
+<!-- Floating (mobile) -->
+<div class="fab">
+  <a class="mess" data-link="messenger" target="_blank" rel="noopener" aria-label="Nhắn Facebook"><svg><use href="#i-mess"/></svg></a>
+  <a class="call" data-link="tel" aria-label="Gọi điện"><svg><use href="#i-phone"/></svg></a>
+</div>
+
+<!-- Bottom nav (mobile) -->
+<nav class="bottom-nav" id="bottomNav" aria-label="Điều hướng"></nav>
+
+<!-- Lightbox -->
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Xem ảnh">
+  <button class="x" id="lbClose" aria-label="Đóng"><svg><use href="#i-x"/></svg></button>
+  <button class="nav prev" id="lbPrev" aria-label="Ảnh trước"><svg><use href="#i-left"/></svg></button>
+  <div class="stage" id="lbStage"></div>
+  <p class="lcap" id="lbCap"></p>
+  <p class="lcount" id="lbCount"></p>
+  <button class="nav next" id="lbNext" aria-label="Ảnh sau"><svg><use href="#i-right"/></svg></button>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  "use strict";
+  const C = CONFIG;
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const money = (n) => Math.round(n).toLocaleString("vi-VN").replace(/,/g, ".") + "đ";
+  const icon = (id, cls = "") => `<svg class="${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
+
+  /* ---------- localStorage an toàn ---------- */
+  const KEY = "gsstudio_v1";
+  const defaults = { tab: "banggia", goi: "kyyeu", loaiKhach: "S", checklist: {}, form: { soNguoi: 1, extraGio: 0, extraAnh: 0 } };
+  let state;
+  try { state = Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY) || "{}")); }
+  catch (e) { state = Object.assign({}, defaults); }
+  state.form = Object.assign({}, defaults.form, state.form || {});
+  state.checklist = state.checklist || {};
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* bộ nhớ đầy hoặc bị chặn – bỏ qua */ } }
+
+  /* ---------- Ảnh qua Netlify Image CDN ---------- */
+  function cdn(src, w, q = 78) {
+    if (!src) return "";
+    if (!C.dungImageCDN || location.protocol === "file:" || /^https?:/.test(src)) return src;
+    return "/.netlify/images?url=" + encodeURIComponent("/" + src.replace(/^\.?\//, "")) + "&w=" + w + "&fm=webp&q=" + q;
+  }
+  // Nếu CDN lỗi (vd chạy máy local) → dùng ảnh gốc; nếu ảnh gốc cũng lỗi → hiện placeholder
+  window.__imgErr = function (el) {
+    if (!el.dataset.tried) { el.dataset.tried = "1"; el.removeAttribute("srcset"); el.src = el.dataset.raw; return; }
+    const ph = document.createElement("div");
+    ph.className = "placeholder"; ph.style.aspectRatio = el.dataset.ratio || "4/5";
+    ph.innerHTML = icon("i-logo") + "<span>Ảnh đang cập nhật</span>";
+    el.replaceWith(ph);
+  };
+  const imgTag = (src, alt, w, extra = "") =>
+    `<img src="${cdn(src, w)}" srcset="${cdn(src, w)} 1x, ${cdn(src, w * 2)} 2x" data-raw="${esc(src)}" alt="${esc(alt)}" loading="lazy" decoding="async" onerror="__imgErr(this)" ${extra}>`;
+
+  /* ---------- Toast ---------- */
+  let tt;
+  function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("show"), 2600); }
+
+  /* ---------- Links liên hệ ---------- */
+  const L = C.lienHe;
+  const linkMap = { facebook: L.facebook, messenger: L.messenger || L.facebook, tiktok: L.tiktok, instagram: L.instagram, zalo: L.zalo, driveAnhKhach: L.driveAnhKhach, tel: "tel:" + L.sdtGoi };
+  $$("[data-link]").forEach((a) => { a.href = linkMap[a.dataset.link] || "#"; });
+
+  /* ---------- Dữ liệu gói ---------- */
+  const GUEST = { S: { ten: "Single", vn: "1 người" }, C: { ten: "Couple", vn: "2 người / cặp" }, G: { ten: "Group", vn: "từ 3 người" } };
+  // Danh sách lựa chọn cho dropdown
+  const OPTIONS = [];
+  C.goi.forEach((g) => {
+    if (g.kieu === "SCG") OPTIONS.push({ id: g.id, ten: g.ten, goi: g });
+    else g.tuyChon.forEach((o) => OPTIONS.push({ id: o.id, ten: g.ten + " – " + o.ten, goi: g, opt: o }));
+  });
+  const findOpt = (id) => OPTIONS.find((o) => o.id === id) || OPTIONS[0];
+  const allPrices = [];
+  C.goi.forEach((g) => g.kieu === "SCG" ? Object.values(g.gia).forEach((p) => allPrices.push(p.gia)) : g.tuyChon.forEach((o) => o.gia && allPrices.push(o.gia)));
+
+  /* ---------- Hero ---------- */
+  $("#promoLabel").textContent = C.uuDai.nhan;
+  $("#promoDate").textContent = "đến " + C.uuDai.denNgay;
+  $("#heroArea").textContent = L.khuVuc;
+  $("#statFrom").textContent = money(Math.min(...allPrices));
+  const H = C.heroAnh, hero = $("#heroImg");
+  hero.alt = H.alt || "Ảnh khách GS.studio";
+  hero.dataset.raw = H.src; hero.dataset.ratio = "4/5";
+  hero.style.objectPosition = H.viTri || "50% 50%";
+  hero.setAttribute("onerror", "__imgErr(this)");
+  // Ảnh ngang bị cắt vào khung dọc 4:5 → ảnh hiển thị rộng gần gấp 2 khung, nên cần tải bản lớn, chất lượng cao để không bị mờ
+  hero.srcset = `${cdn(H.src, 1200, 90)} 1200w, ${cdn(H.src, 1600, 90)} 1600w, ${cdn(H.src, 2000, 92)} 2000w`;
+  hero.sizes = "(min-width:900px) 1050px, 190vw";
+  hero.src = cdn(H.src, 2000, 92);
+
+  /* ---------- Story toggle ---------- */
+  $("#storyToggle").addEventListener("click", function () {
+    const b = $("#storyBody"); const open = b.classList.toggle("clamped") === false;
+    this.textContent = open ? "Thu gọn" : "Đọc tiếp câu chuyện"; this.setAttribute("aria-expanded", open);
+  });
+
+  /* ---------- Tabs ---------- */
+  const TABS = [
+    { id: "banggia", ten: "Bảng giá", ic: "i-tag" },
+    { id: "concept", ten: "Concept & Ảnh", ic: "i-img" },
+    { id: "chuanbi", ten: "Chuẩn bị", ic: "i-list" },
+    { id: "datlich", ten: "Đặt lịch", ic: "i-cal" }
+  ];
+  $("#topTabs").innerHTML = TABS.map((t) => `<button data-tab="${t.id}">${t.ten}</button>`).join("");
+  $("#bottomNav").innerHTML = TABS.map((t) => `<button data-tab="${t.id}">${icon(t.ic)}<span>${t.ten}</span></button>`).join("");
+  function showTab(id, scroll) {
+    if (!TABS.some((t) => t.id === id)) id = "banggia";
+    state.tab = id; save();
+    $$(".panel").forEach((p) => p.classList.toggle("active", p.id === "panel-" + id));
+    $$("[data-tab]").forEach((b) => { const on = b.dataset.tab === id; b.classList.toggle("active", on); b.setAttribute("aria-current", on ? "page" : "false"); });
+    if (history.replaceState) history.replaceState(null, "", "#" + id);
+    if (scroll) $("#tabs").scrollIntoView({ behavior: "smooth" });
+    observeReveals();
+  }
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-tab]"); if (t) { showTab(t.dataset.tab, true); return; }
+    const g = e.target.closest("[data-goto]"); if (g) { e.preventDefault(); showTab(g.dataset.goto, true); }
+  });
+
+  /* ---------- Bảng giá ---------- */
+  function segHTML() {
+    return Object.entries(GUEST).map(([k, v]) => `<button type="button" role="radio" data-guest="${k}">${v.ten}<small>${v.vn}</small></button>`).join("");
+  }
+  $("#guestSeg").innerHTML = segHTML();
+  $("#formSeg").innerHTML = segHTML();
+  $("#priceIntro").textContent = C.uuDai.moTa + ". Chọn loại khách để xem nhanh giá phù hợp với bạn.";
+  const unitTxt = (u) => (u === "cap" ? "/cặp" : "/người");
+
+  function priceRow(label, sub, p, hl, dim, btnAttr) {
+    const tag = btnAttr ? "button" : "div";
+    const val = p.gia == null
+      ? `<span class="contact">Liên hệ tư vấn</span>`
+      : `${p.giaGoc ? `<s>${money(p.giaGoc)}</s>` : ""}<span class="amount">${money(p.gia)}</span><span class="unit">${unitTxt(p.donVi)}</span>`;
+    return `<${tag} class="prow${hl ? " hl" : ""}${dim ? " dim" : ""}" ${btnAttr || ""}><span class="lbl"><b>${label}</b><span>${sub}</span></span><span class="val">${val}</span></${tag}>`;
+  }
+
+  // Phụ thu: mỗi khoản 1 dòng riêng, ghi chú xuống hàng bên dưới
+  function extrasHTML() {
+    const row = (ten, gia, note) => `<div class="extra-row"><div class="top"><span>${ten}</span><b>${gia}</b></div>${note ? `<small>${esc(note)}</small>` : ""}</div>`;
+    return `<div class="extras"><p class="extras-h">Phụ thu (Extra)</p>
+      ${row("Extra giờ chụp", `${money(C.extraGio)}/giờ`, C.ghiChuExtraGio)}
+      ${row("Extra retouch", `${money(C.extraRetouch.gia)}/${C.extraRetouch.soAnh} ảnh`, C.ghiChuExtraRetouch)}
+      <p class="extras-note">${esc(C.ghiChuGia)} Ưu đãi ra mắt có thời hạn đến ${esc(C.uuDai.denNgay)}.</p>
+    </div>`;
+  }
+
+  // Khung "Quyền lợi chung" – hiện ở Bảng giá & Đặt lịch
+  function renderPerks() {
+    const items = C.quyenLoi.map((q) => `<li>${icon("i-checkc")}<span>${esc(q)}</span></li>`).join("");
+    const html = `<div><p class="eyebrow">Quyền lợi chung</p><h3>Gói nào cũng có</h3><ul class="perks-list">${items}</ul></div>${extrasHTML()}`.replace("</ul>", C.quyenLoiKyYeu ? `<li>${icon("i-checkc")}<span>${esc(C.quyenLoiKyYeu)}</span></li></ul>` : "</ul>");
+    $$("[data-perks]").forEach((el) => { el.innerHTML = html; });
+  }
+  renderPerks();
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("[data-perks-link]"); if (!a) return;
+    e.preventDefault();
+    const el = $("#quyen-loi"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  function renderPrices() {
+    const guest = state.loaiKhach;
+    $$("[data-guest]").forEach((b) => { const on = b.dataset.guest === guest; b.classList.toggle("active", on); b.setAttribute("aria-checked", on); });
+    const picked = findOpt(state.goi);
+    $("#priceGrid").innerHTML = C.goi.map((g) => {
+      let rows;
+      if (g.kieu === "SCG") {
+        rows = Object.entries(g.gia).map(([k, p]) => priceRow(`${k} · ${GUEST[k].ten}`, p.thoiGian + (p.ghiChu ? " • " + p.ghiChu : ""), p, k === guest, k !== guest)).join("");
+      } else {
+        const sel = picked.goi.id === g.id ? picked.id : g.tuyChon[0].id;
+        rows = g.tuyChon.map((o) => priceRow(o.ten, o.thoiGian, o, o.id === sel, false, `type="button" data-sub="${o.id}" aria-pressed="${o.id === sel}"`)).join("")
+          + `<span class="hint" style="padding:0 4px">Tính theo người, áp dụng cho mọi loại khách • chạm để chọn</span>`;
+      }
+      const isPicked = picked.goi.id === g.id;
+      return `<article class="card pcard reveal${isPicked ? " is-picked" : ""}" data-card="${g.id}">
+        <span class="ribbon">${g.noiBat ? "TRỌN NGÀY" : esc(C.uuDai.nhan)}</span>
+        <div class="ic" aria-hidden="true">${g.icon}</div>
+        <h3>${esc(g.ten)}</h3><p class="ph">${esc(g.phuDe)}</p>
+        <div class="prices">${rows}</div>
+        <p class="incl">${icon("i-checkc")}<span>Đã gồm đầy đủ <a href="#quyen-loi" data-perks-link>quyền lợi chung</a>${g.daoCu ? " + hỗ trợ đạo cụ" : ""}</span></p>
+        <button class="btn ${isPicked ? "btn-gold" : "btn-ghost"} btn-block" data-pick="${g.id}">${isPicked ? "Đã chọn – Đặt lịch ngay" : "Chọn gói này"}</button>
+      </article>`;
+    }).join("");
+    observeReveals(true);
+  }
+  $("#priceGrid").addEventListener("click", (e) => {
+    const sub = e.target.closest("[data-sub]");
+    if (sub) { state.goi = sub.dataset.sub; save(); renderPrices(); syncForm(); return; }
+    const pick = e.target.closest("[data-pick]");
+    if (pick) {
+      const g = C.goi.find((x) => x.id === pick.dataset.pick);
+      if (g.kieu === "SCG") state.goi = g.id;
+      else { const cur = findOpt(state.goi); state.goi = cur.goi.id === g.id ? cur.id : g.tuyChon[0].id; }
+      adjustPeople(); save(); renderPrices(); syncForm();
+      toast("Đã chọn " + findOpt(state.goi).ten + " ✨");
+      showTab("datlich", true);
+    }
+  });
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-guest]"); if (!b) return;
+    state.loaiKhach = b.dataset.guest; adjustPeople(); save(); renderPrices(); syncForm();
+  });
+
+  /* ---------- FAQ ---------- */
+  $("#faq").insertAdjacentHTML("beforeend", C.faq.map((f) => `<details class="reveal"><summary>${esc(f.q)}<i aria-hidden="true"></i></summary><div class="ans">${esc(f.a)}</div></details>`).join(""));
+
+  /* ---------- Ảnh khách & video ---------- */
+  const TAGS = { pregrad: "Pre-Graduation", le: "Lễ tốt nghiệp" };
+  const visible = C.gallery.filter((it) => it.src);
+  function videoHTML(v) {
+    if (!v || (!v.file && !v.link)) return "";
+    let inner;
+    const yt = (v.link || "").match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([\w-]{6,})/);
+    const dr = (v.link || "").match(/drive\.google\.com\/file\/d\/([\w-]+)/);
+    if (v.file) inner = `<video controls playsinline preload="none" ${v.poster ? `poster="${esc(cdn(v.poster, 800))}"` : ""}><source src="${esc(v.file)}" type="video/mp4">Trình duyệt chưa hỗ trợ video.</video>`;
+    else if (yt) inner = `<iframe src="https://www.youtube-nocookie.com/embed/${yt[1]}" title="${esc(v.tieuDe)}" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    else if (dr) inner = `<iframe src="https://drive.google.com/file/d/${dr[1]}/preview" title="${esc(v.tieuDe)}" loading="lazy" allow="autoplay" allowfullscreen></iframe>`;
+    else inner = `<a class="video-link" href="${esc(v.link)}" target="_blank" rel="noopener"><span class="play">${icon("i-play")}</span><b>Xem video</b><span class="muted" style="font-size:13px">Mở trong tab mới</span></a>`;
+    return `<figure class="polaroid video-card reveal${v.doc === false ? " landscape" : ""}"><span class="gift">🎁 QUÀ TẶNG KÈM</span><div class="ph-img">${inner}</div>
+      <figcaption><p><b>${esc(v.tieuDe)}</b>${esc(v.moTa)}</p></figcaption></figure>`;
+  }
+  const featured = (C.anhNoiBat || []).map((src) => visible.find((v) => v.src === src)).filter(Boolean);
+  if (!featured.length) featured.push(...visible.slice(0, 4));
+  function renderMoments() {
+    const vid = videoHTML(C.video);
+    const grid = $("#moments");
+    grid.classList.toggle("has-video", !!vid);
+    grid.innerHTML = featured.slice(0, 4).map((it, i) => `<button type="button" class="polaroid moment reveal" data-lb="${i}" aria-label="Xem lớn: ${esc(it.caption)}">
+        ${TAGS[it.tag] ? `<span class="chip-tag">${TAGS[it.tag]}</span>` : ""}
+        <div class="ph-img">${imgTag(it.src, it.caption, 760, `data-ratio="3/2" style="object-position:${esc(it.viTri || "50% 50%")}"`)}</div>
+        <figcaption><p><b>${esc(it.caption)}</b>Ảnh khách GS.studio</p></figcaption></button>`).join("") + vid;
+    if (!visible.length && !vid) $("#anhkhach").hidden = true;
+  }
+
+  /* ---------- Lightbox ---------- */
+  let lbIdx = 0, lbList = visible, gTag = "all";
+  function renderGallery() {
+    const tags = ["all", ...Object.keys(TAGS).filter((t) => visible.some((v) => v.tag === t))];
+    $("#gFilter").innerHTML = tags.map((t) => `<button type="button" data-gf="${t}" class="${t === gTag ? "active" : ""}" aria-pressed="${t === gTag}">${t === "all" ? "Tất cả" : TAGS[t]}</button>`).join("");
+    const list = visible.filter((v) => gTag === "all" || v.tag === gTag);
+    $("#gGrid").innerHTML = list.map((it, i) => `<button type="button" class="polaroid moment" data-glb="${i}" aria-label="Xem lớn: ${esc(it.caption)}">
+        ${TAGS[it.tag] ? `<span class="chip-tag">${TAGS[it.tag]}</span>` : ""}
+        <div class="ph-img">${imgTag(it.src, it.caption, 640, `data-ratio="4/5" style="object-position:${esc(it.viTri || "50% 50%")}"`)}</div>
+        <figcaption><p><b>${esc(it.caption)}</b>Ảnh khách GS.studio</p></figcaption></button>`).join("");
+    return list;
+  }
+  let gList = renderGallery();
+  $("#gFilter").addEventListener("click", (e) => { const b = e.target.closest("[data-gf]"); if (b) { gTag = b.dataset.gf; gList = renderGallery(); } });
+  $("#gGrid").addEventListener("click", (e) => { const g = e.target.closest("[data-glb]"); if (g) { lbList = gList; lbOpen(+g.dataset.glb); } });
+  const SR = C.sapRaMat || {};
+  $$("[data-soon]").forEach((el) => { el.textContent = SR[el.dataset.soon] || ""; });
+  $("#soonGrid").innerHTML = (SR.concept || []).map((c) => `<div class="soon-card" aria-disabled="true"><span class="cs">Coming soon</span><span class="cam">${icon("i-cam")}</span><h4>${esc(c.ten)}</h4><p>${esc(c.moTa)}</p></div>`).join("");
+  const lb = $("#lb");
+  function lbRender() {
+    const it = lbList[lbIdx];
+    $("#lbStage").innerHTML = `<img src="${cdn(it.src, 1600)}" data-raw="${esc(it.src)}" data-ratio="3/2" alt="${esc(it.caption)}" onerror="__imgErr(this)">`;
+    $("#lbCap").textContent = it.caption; $("#lbCount").textContent = `${lbIdx + 1} / ${lbList.length}`;
+  }
+  const lbGo = (d) => { lbIdx = (lbIdx + d + lbList.length) % lbList.length; lbRender(); };
+  function lbOpen(i) { lbIdx = i; lbRender(); lb.classList.add("open"); document.body.style.overflow = "hidden"; $("#lbClose").focus(); }
+  function lbClose() { lb.classList.remove("open"); document.body.style.overflow = ""; }
+  $("#moments").addEventListener("click", (e) => { const g = e.target.closest("[data-lb]"); if (g) { lbList = featured; lbOpen(+g.dataset.lb); } });
+  $("#lbClose").onclick = lbClose; $("#lbPrev").onclick = () => lbGo(-1); $("#lbNext").onclick = () => lbGo(1);
+  lb.addEventListener("click", (e) => { if (e.target === lb || e.target.id === "lbStage") lbClose(); });
+  document.addEventListener("keydown", (e) => { if (!lb.classList.contains("open")) return; if (e.key === "Escape") lbClose(); if (e.key === "ArrowLeft") lbGo(-1); if (e.key === "ArrowRight") lbGo(1); });
+  let tx = null, ty = null;
+  lb.addEventListener("touchstart", (e) => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+  lb.addEventListener("touchend", (e) => {
+    if (tx == null) return; const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) lbGo(dx < 0 ? 1 : -1); else if (dy > 90) lbClose();
+    tx = ty = null;
+  });
+
+  $("#placeList").innerHTML = (C.goiYDiaDiem || []).map((t) => `<option value="${esc(t)}">`).join("");
+
+  /* ---------- Checklist ---------- */
+  function renderChecklist() {
+    const html = C.checklist.map((g, gi) => `<div class="card cgroup reveal"><h3>${esc(g.nhom)}</h3>${g.items.map((t, ii) => {
+      const k = gi + "-" + ii; return `<label class="citem"><input type="checkbox" data-ck="${k}" ${state.checklist[k] ? "checked" : ""}><span class="box">${icon("i-check")}</span><span>${esc(t)}</span></label>`;
+    }).join("")}</div>`).join("");
+    $("#prepGrid").insertAdjacentHTML("beforeend", html);
+    updateProgress();
+  }
+  function updateProgress() {
+    const total = C.checklist.reduce((s, g) => s + g.items.length, 0);
+    const done = $$("[data-ck]").filter((i) => i.checked).length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    $("#progressPct").textContent = pct + "%"; $("#progressBar").style.width = pct + "%";
+    $("#progressText").textContent = pct === 100 ? "Tuyệt vời! Bạn đã sẵn sàng lên hình 🎉" : `Đã chuẩn bị ${done}/${total} mục`;
+  }
+  $("#prepGrid").addEventListener("change", (e) => {
+    const i = e.target.closest("[data-ck]"); if (!i) return;
+    if (i.checked) state.checklist[i.dataset.ck] = true; else delete state.checklist[i.dataset.ck];
+    save(); updateProgress();
+  });
+  $("#tips").innerHTML = C.meoTaoDang.map((t, i) => `<div class="card tip reveal"><div class="n gold-text">0${i + 1}</div><h4>${esc(t.t)}</h4><p>${esc(t.d)}</p></div>`).join("");
+  $("#colors").innerHTML = C.mauTrangPhuc.map((c) => `<div class="card tip reveal"><div class="swatches">${c.mau.map((m) => `<i style="background:${m};width:26px;height:26px"></i>`).join("")}</div><h4>${esc(c.concept)}</h4><p>${esc(c.goiY)}</p></div>`).join("");
+  $("#timeline").innerHTML = C.quyTrinh.map((s, i) => `<li class="reveal"><span class="step">${i + 1}</span><div class="card tbody"><h4>${esc(s.t)}</h4><p>${esc(s.d)}</p></div></li>`).join("");
+
+  /* ---------- Form & báo giá ---------- */
+  const F = (n) => $("#f-" + n);
+  $("#f-goi").innerHTML = OPTIONS.map((o) => `<option value="${o.id}">${esc(o.ten)}</option>`).join("");
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const iso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  F("ngay").min = iso(today);
+  const FIELDS = ["hoTen", "sdt", "truongLop", "soNguoi", "ngay", "gio", "diaDiem", "extraGio", "extraAnh", "ghiChu"];
+
+  function minPeople() { const o = findOpt(state.goi); if (o.goi.kieu !== "SCG") return 1; return state.loaiKhach === "G" ? 3 : state.loaiKhach === "C" ? 2 : 1; }
+  function adjustPeople() {
+    const o = findOpt(state.goi); let n = +state.form.soNguoi || 1;
+    if (o.goi.kieu === "SCG") {
+      if (state.loaiKhach === "S") n = Math.max(1, n === 2 || n === 3 ? 1 : n);
+      if (state.loaiKhach === "C") n = Math.max(2, n % 2 ? n + 1 : n);
+      if (state.loaiKhach === "G") n = Math.max(3, n);
+    }
+    state.form.soNguoi = n;
+  }
+  function syncForm() {
+    F("goi").value = findOpt(state.goi).id;
+    FIELDS.forEach((n) => { const el = F(n); const v = state.form[n]; if (document.activeElement !== el) el.value = v == null ? "" : v; });
+    calc();
+  }
+  function quote() {
+    const o = findOpt(state.goi), f = state.form, n = Math.max(1, parseInt(f.soNguoi) || 1);
+    let p, label, base = 0, units = n, unitName = "người", contact = false;
+    if (o.goi.kieu === "SCG") { p = o.goi.gia[state.loaiKhach]; label = `${o.goi.ten} – ${GUEST[state.loaiKhach].ten}`; }
+    else { p = o.opt; label = o.ten; }
+    if (p.gia == null) contact = true;
+    else if (p.donVi === "cap") { units = Math.ceil(n / 2); unitName = "cặp"; base = p.gia * units; }
+    else base = p.gia * n;
+    const eg = Math.max(0, parseInt(f.extraGio) || 0), ea = Math.max(0, parseInt(f.extraAnh) || 0);
+    const egMoney = eg * C.extraGio, eaBlocks = Math.ceil(ea / C.extraRetouch.soAnh), eaMoney = eaBlocks * C.extraRetouch.gia;
+    const total = base + egMoney + eaMoney;
+    return { o, p, label, n, units, unitName, base, eg, ea, egMoney, eaMoney, total, contact, deposit: Math.round((total * C.datCocPhanTram) / 100 / 1000) * 1000 };
+  }
+  const fmtDate = (s) => { if (!s) return ""; const [y, m, d] = s.split("-"); const dt = new Date(+y, m - 1, +d); const thu = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"][dt.getDay()]; return `${thu}, ${d}/${m}/${y}`; };
+
+  function calc() {
+    const q = quote();
+    // gợi ý số người
+    const hint = $("#soNguoiHint"); hint.className = "hint";
+    if (q.o.goi.kieu === "SCG" && state.loaiKhach === "G" && q.n < 3) { hint.textContent = "Gói Group áp dụng từ 3 người"; hint.className = "hint warn"; }
+    else if (q.p.donVi === "cap") hint.textContent = `= ${q.units} cặp`;
+    else hint.textContent = q.p.thoiGian ? "Thời gian: " + q.p.thoiGian : "";
+    $("#extraGioHint").textContent = `${money(C.extraGio)}/giờ`;
+    $("#extraAnhHint").textContent = `${money(C.extraRetouch.gia)}/${C.extraRetouch.soAnh} ảnh`;
+    // form segment chỉ có ý nghĩa với gói S/C/G
+    $("#formSeg").style.opacity = q.o.goi.kieu === "SCG" ? 1 : .5;
+
+    const lines = [
+      ["Gói", q.label],
+      ["Đơn giá", q.contact ? "Liên hệ tư vấn" : money(q.p.gia) + unitTxt(q.p.donVi)],
+      ["Số lượng", q.p.donVi === "cap" ? `${q.n} người (${q.units} cặp)` : `${q.n} người`],
+      ["Thời gian chụp", q.p.thoiGian || "—"],
+      ["Tiền gói", q.contact ? "Liên hệ" : money(q.base)]
+    ];
+    if (q.eg) lines.push([`Extra ${q.eg} giờ`, money(q.egMoney)]);
+    if (q.ea) lines.push([`Extra retouch ${q.ea} ảnh`, money(q.eaMoney)]);
+    $("#quoteLines").innerHTML = lines.map(([a, b]) => `<div class="qline"><span>${esc(a)}</span><span>${esc(b)}</span></div>`).join("");
+    $("#qTotal").textContent = q.contact ? (q.total ? money(q.total) + " + gói" : "Liên hệ") : money(q.total);
+    $("#qPct").textContent = C.datCocPhanTram;
+    $("#qDeposit").textContent = q.contact ? "Theo báo giá" : money(q.deposit);
+    renderCountdown();
+    const msg = buildMessage(q);
+    $("#msgPreview").textContent = msg;
+    $("#sendZalo").href = L.zalo;
+    return msg;
+  }
+  function renderCountdown() {
+    const el = $("#countdown"), s = state.form.ngay;
+    if (!s) { el.innerHTML = `<div class="num gold-text">?</div><p>Chọn ngày chụp để xem đếm ngược<small>Mùa kỷ yếu kín lịch nhanh lắm nha!</small></p>`; return; }
+    const [y, m, d] = s.split("-"); const target = new Date(+y, m - 1, +d);
+    const days = Math.round((target - today) / 86400000);
+    if (days > 0) el.innerHTML = `<div class="num gold-text">${days}</div><p>Còn ${days} ngày đến buổi chụp<small>${fmtDate(s)}</small></p>`;
+    else if (days === 0) el.innerHTML = `<div class="num gold-text">🎉</div><p>Hôm nay là ngày chụp!<small>Chúc bạn có bộ ảnh thật đẹp</small></p>`;
+    else el.innerHTML = `<div class="num" style="color:#B5612A">!</div><p>Ngày đã chọn đã qua<small>Chọn lại ngày chụp mới giúp tụi mình nha</small></p>`;
+  }
+  function buildMessage(q) {
+    const f = state.form; q = q || quote();
+    const L2 = [
+      "Chào GS.studio 👋 Mình muốn đặt lịch chụp ✨",
+      "",
+      "• Họ tên: " + (f.hoTen || "…"),
+      "• SĐT/Zalo: " + (f.sdt || "…"),
+      f.truongLop ? "• Trường/Lớp: " + f.truongLop : null,
+      "• Gói: " + q.label + (q.contact ? " (cần tư vấn giá)" : ` (${money(q.p.gia)}${unitTxt(q.p.donVi)})`),
+      "• Số người: " + q.n + (q.p.donVi === "cap" ? ` (${q.units} cặp)` : ""),
+      "• Ngày chụp mong muốn: " + (f.ngay ? fmtDate(f.ngay) : "chưa chọn"),
+      f.gio ? "• Giờ ưu tiên: " + f.gio : null,
+      f.diaDiem ? "• Địa điểm/Concept: " + f.diaDiem : null,
+      q.eg ? `• Extra giờ: ${q.eg} giờ (${money(q.egMoney)})` : null,
+      q.ea ? `• Extra retouch: ${q.ea} ảnh (${money(q.eaMoney)})` : null,
+      "",
+      q.contact ? "💰 Tạm tính: nhờ studio báo giá giúp mình" : "💰 Tổng tạm tính: " + money(q.total),
+      q.contact ? null : `💳 Đặt cọc đề xuất (${C.datCocPhanTram}%): ${money(q.deposit)}`,
+      f.ghiChu ? "\n📝 Ghi chú: " + f.ghiChu : null,
+      "",
+      "Nhờ studio tư vấn và xác nhận lịch giúp mình nha. Cảm ơn GS.studio! 📸"
+    ];
+    return L2.filter((x) => x !== null).join("\n");
+  }
+
+  $("#bookForm").addEventListener("input", (e) => {
+    const el = e.target; if (!el.name) return;
+    if (el.name === "goi") { state.goi = el.value; adjustPeople(); syncForm(); renderPrices(); }
+    else state.form[el.name] = el.value;
+    save(); calc();
+  });
+  $("#bookForm").addEventListener("change", (e) => {
+    if (e.target.name === "soNguoi") { adjustPeopleFromInput(); }
+  });
+  function adjustPeopleFromInput() {
+    const o = findOpt(state.goi); let n = Math.max(1, parseInt(state.form.soNguoi) || 1);
+    if (o.goi.kieu === "SCG") { // tự đổi loại khách theo số người
+      if (state.loaiKhach === "G" && n < 3) n = 3;
+      if (state.loaiKhach === "S" && n === 2) { state.loaiKhach = "C"; toast("2 người – đã chuyển sang giá Couple cho tiết kiệm nha"); }
+      else if (state.loaiKhach === "S" && n >= 3) { state.loaiKhach = "G"; toast("Từ 3 người – đã chuyển sang giá Group cho tiết kiệm nha"); }
+      if (state.loaiKhach === "C" && n % 2) n += 1;
+    }
+    state.form.soNguoi = n; save(); renderPrices(); syncForm();
+  }
+  $("#bookForm").addEventListener("submit", (e) => e.preventDefault());
+  $$("[data-step]").forEach((b) => b.addEventListener("click", () => {
+    const k = b.dataset.step, d = +b.dataset.d, el = F(k);
+    let v = Math.max(+el.min || 0, (parseInt(state.form[k]) || 0) + (k === "soNguoi" && state.loaiKhach === "C" && findOpt(state.goi).goi.kieu === "SCG" ? d * 2 : d));
+    if (el.max) v = Math.min(+el.max, v);
+    state.form[k] = v; if (k === "soNguoi") adjustPeopleFromInput(); else { save(); syncForm(); }
+  }));
+
+  function validate() {
+    const f = state.form;
+    if (!f.hoTen || !String(f.hoTen).trim()) { toast("Bạn điền họ tên giúp tụi mình nha"); F("hoTen").focus(); return false; }
+    if (!f.sdt || String(f.sdt).replace(/\D/g, "").length < 9) { toast("SĐT/Zalo chưa đúng, bạn kiểm tra lại nha"); F("sdt").focus(); return false; }
+    return true;
+  }
+  async function copyText(t) {
+    try { await navigator.clipboard.writeText(t); return true; }
+    catch (e) {
+      try { const ta = document.createElement("textarea"); ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; }
+      catch (e2) { return false; }
+    }
+  }
+  $("#copyMsg").addEventListener("click", async () => {
+    if (!validate()) return;
+    const ok = await copyText(buildMessage());
+    toast(ok ? "Đã sao chép tin nhắn – dán vào Messenger/Zalo để gửi nha ✨" : "Không sao chép được, bạn mở “Xem trước tin nhắn” để copy thủ công");
+  });
+  $("#sendMess").addEventListener("click", async () => {
+    if (!validate()) return;
+    const w = window.open("about:blank", "_blank");
+    const ok = await copyText(buildMessage());
+    toast(ok ? "Đã sao chép tin nhắn – dán vào khung chat Messenger nha" : "Mở Messenger… bạn copy tin nhắn ở phần xem trước nha");
+    if (w) w.location.href = linkMap.messenger; else location.href = linkMap.messenger;
+  });
+  $("#sendZalo").addEventListener("click", async (e) => {
+    if (!validate()) { e.preventDefault(); return; }
+    await copyText(buildMessage()); toast("Đã sao chép tin nhắn – dán vào Zalo nha");
+  });
+  $("#resetBtn").addEventListener("click", () => {
+    if (!confirm("Xóa toàn bộ dữ liệu đã lưu (gói đã chọn, checklist, thông tin đặt lịch)?")) return;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    state = JSON.parse(JSON.stringify(defaults)); state.tab = "datlich";
+    $$("[data-ck]").forEach((i) => (i.checked = false)); updateProgress();
+    FIELDS.forEach((n) => (F(n).value = ""));
+    renderPrices(); syncForm(); toast("Đã xóa dữ liệu");
+  });
+
+  /* ---------- Footer ---------- */
+  const socials = [
+    ["facebook", "i-fb", "Facebook GS.studio"], ["messenger", "i-mess", "Messenger"], ["tiktok", "i-tt", "TikTok GS.studio"],
+    ["instagram", "i-ig", "Instagram GS.studio"], ["zalo", "i-zalo", "Zalo"], ["tel", "i-phone", "Gọi điện"]
+  ].filter(([k]) => linkMap[k]);
+  $("#socials").innerHTML = socials.map(([k, ic, lb]) => `<a class="soc" href="${esc(linkMap[k])}" ${k === "tel" ? "" : 'target="_blank" rel="noopener"'} aria-label="${lb}">${icon(ic)}</a>`).join("");
+  const contacts = [
+    ["tel", "i-phone", L.sdt], ["facebook", "i-fb", "Facebook: " + L.ten], ["tiktok", "i-tt", "TikTok: " + L.ten],
+    ["instagram", "i-ig", "Instagram: " + L.ten], ["zalo", "i-zalo", "Zalo: " + L.sdt]
+  ].filter(([k]) => linkMap[k]);
+  $("#footContact").innerHTML = contacts.map(([k, ic, lb]) => `<li><a href="${esc(linkMap[k])}" ${k === "tel" ? "" : 'target="_blank" rel="noopener"'}>${icon(ic)}<span>${esc(lb)}</span></a></li>`).join("");
+  $("#footArea").innerHTML = `<li>${icon("i-pin")}<span>${esc(L.khuVuc)}</span></li>`;
+
+  /* ---------- Reveal khi cuộn ---------- */
+  let io = null, booted = false;
+  function observeReveals(instant) {
+    const els = $$(".reveal:not(.in)");
+    if ((instant && booted) || !("IntersectionObserver" in window)) { els.forEach((e) => e.classList.add("in")); return; }
+    io = io || new IntersectionObserver((ents) => ents.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } }), { rootMargin: "0px 0px -8% 0px", threshold: 0.06 });
+    els.forEach((e) => io.observe(e));
+  }
+
+  /* ---------- Khởi động ---------- */
+  adjustPeople();
+  renderPrices(); renderMoments(); renderChecklist(); syncForm();
+  booted = true;
+  const fromHash = location.hash.replace("#", "");
+  showTab(TABS.some((t) => t.id === fromHash) ? fromHash : state.tab, !!TABS.some((t) => t.id === fromHash));
+})();
+</script>
+</body>
+</html>
